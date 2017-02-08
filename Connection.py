@@ -3,10 +3,10 @@ __author__ = 'Chason'
 import random
 
 class Connection:
-    def __init__(self, input, output, weight = 0, enable = True, randWeight = False):
+    def __init__(self, input, output, weight = None, enable = True):
         self.input = input
         self.output = output
-        if not randWeight:
+        if weight != None:
             self.weight = weight
         else:
             self.weight = self.randomWeight()
