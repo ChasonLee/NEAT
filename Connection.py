@@ -9,8 +9,8 @@ class Connection:
         if not randWeight:
             self.weight = weight
         else:
-            self.weight = randomWeight()
+            self.weight = self.randomWeight()
         self.enable = enable
 
     def randomWeight(self):
-        self.weight = random.random() * 2 - 1
+        self.weight = (random.random() * 2 - 1) * 10
