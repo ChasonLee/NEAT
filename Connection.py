@@ -14,4 +14,4 @@ class Connection:
         self.innovation = innovation
 
     def randomWeight(self):
-        self.weight = (random.random() * 2 - 1) * 10
+        self.weight = random.uniform(-10, 10)

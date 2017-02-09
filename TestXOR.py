@@ -3,6 +3,6 @@ __author__ = 'Chason'
 
 from Environment import *
 
-env = Environment(2, 1, 3, 2)
+env = Environment(2, 1, 10000, 100)
 # env.test()
 env.run()
