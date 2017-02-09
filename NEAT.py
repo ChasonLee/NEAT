@@ -5,7 +5,8 @@ from Connection import *
 import math
 
 class NEAT:
-    def __init__(self, inputNum, outputNum):
+    def __init__(self, id, inputNum, outputNum):
+        self.id = id
         self.inputNum = inputNum
         self.outputNum = outputNum
         self.biasNode = Node(id=0, tag='Bias Node', value=1)
@@ -27,31 +28,36 @@ class NEAT:
             self.nodeCount += 1
 
         # connection
+        innovation = 0
         self.connections = []
         for i in range(inputNum):
             for j in range(outputNum):
-                self.addConnection(self.inputNodes[i], self.outputNodes[j])
+                self.addConnection(innovation, self.inputNodes[i], self.outputNodes[j])
+                innovation += 1
 
         for j in range(outputNum):
-            self.addConnection(self.biasNode, self.outputNodes[j])
+            self.addConnection(innovation, self.biasNode, self.outputNodes[j])
+            innovation += 1
 
-    def addConnection(self, inputNode, outputNode, weight = None):
+    def addConnection(self, innovation, inputNode, outputNode, weight = None):
         if weight == None:
-            con = Connection(inputNode, outputNode)
+            con = Connection(innovation, inputNode, outputNode)
             con.randomWeight()
         else:
-            con = Connection(inputNode, outputNode, weight)
+            con = Connection(innovation, inputNode, outputNode, weight)
         self.connections.append(con)
 
 
     def showStructure(self):
-        print "Total nodes:", self.nodeCount
-        print "Connections(%d):"%len(self.connections)
+        print "Genome %d:"%self.id
+        print "\tTotal nodes:", self.nodeCount
+        print "\tConnections(%d):"%len(self.connections)
         for con in self.connections:
-            print "\t[%s %d] = %f\t**[%f]**\t[%s %d] = %f\tEnable = %s"%(con.input.tag, con.input.id, con.input.value,
-                                                                        con.weight,
-                                                                        con.output.tag, con.output.id, con.output.value,
-                                                                        con.enable )
+            print "\t\t[%s %d] = %f\t**[%f]**\t[%s %d] = %f\tEnable = %s\tInnovation = %d"%(
+                    con.input.tag, con.input.id, con.input.value,
+                    con.weight,
+                    con.output.tag, con.output.id, con.output.value,
+                    con.enable, con.innovation)
         print
 
     def sigmoid(self, z):
@@ -93,7 +99,7 @@ class NEAT:
                 return True
         return False
 
-    def mutation(self):
+    def mutation(self, innovation):
         if self.probability(0.6):
             # modify connections
             for con in self.connections:
@@ -109,8 +115,10 @@ class NEAT:
                     # add a new node
                     con.enable = False
                     node = self.addHiddenNode("Hidden Node")
-                    self.addConnection(con.input, node, 1)
-                    self.addConnection(node, con.output, con.weight)
+                    self.addConnection(innovation[0], con.input, node, 1)
+                    innovation[0] += 1
+                    self.addConnection(innovation[0], node, con.output, con.weight)
+                    innovation[0] += 1
         else:
             # add new connections
             for hid in self.hiddenNodes:
@@ -118,14 +126,17 @@ class NEAT:
                 for node in self.inputNodes:
                     if not self.isConnectionExist(node, hid):
                         if self.probability(0.2):
-                            self.addConnection(node, hid)
+                            self.addConnection(innovation[0], node, hid)
+                            innovation[0] += 1
                 # search hidden nodes
                 for hid2 in self.hiddenNodes:
                     if hid.id != hid2.id and not self.isConnectionExist(hid, hid2):
                         if self.probability(0.1):
-                            self.addConnection(hid, hid2)
+                            self.addConnection(innovation[0], hid, hid2)
+                            innovation[0] += 1
                 # search output nodes
                 for node in self.outputNodes:
                     if not self.isConnectionExist(hid, node):
                         if self.probability(0.2):
-                            self.addConnection(hid, node)
+                            self.addConnection(innovation[0], hid, node)
+                            innovation[0] += 1
