@@ -75,7 +75,8 @@ class NEAT:
             out.value = self.updateNode(out.id)
 
     def probability(self, p):
-        if random.random() <= p:
+        rnd = random.random()
+        if rnd <= p:
             return True
         else:
             return False
@@ -86,21 +87,45 @@ class NEAT:
         self.nodeCount += 1
         return node
 
-    def mutation(self):
+    def isConnectionExist(self, input, output):
         for con in self.connections:
-            if self.probability(0.8):
-                # connection weight mutate
-                if self.probability(0.9):
-                    # uniformly perturb
-                    con.weight += (random.random() * 2 - 1) * 3
-                else:
-                    # assign a new random weight
-                    con.randomWeight()
-            elif self.probability(0.5):
-                # add a new node
-                con.enable = False
-                node = self.addHiddenNode("Hidden Node")
-                self.addConnection(con.input, node, 1)
-                self.addConnection(node, con.output, con.weight)
+            if input.id == con.input.id and output.id == con.output.id:
+                return True
+        return False
 
-
+    def mutation(self):
+        if self.probability(0.6):
+            # modify connections
+            for con in self.connections:
+                if self.probability(0.8):
+                    # connection weight mutate
+                    if self.probability(0.9):
+                        # uniformly perturb
+                        con.weight += (random.random() * 2 - 1) * 3
+                    else:
+                        # assign a new random weight
+                        con.randomWeight()
+                elif self.probability(0.5):
+                    # add a new node
+                    con.enable = False
+                    node = self.addHiddenNode("Hidden Node")
+                    self.addConnection(con.input, node, 1)
+                    self.addConnection(node, con.output, con.weight)
+        else:
+            # add new connections
+            for hid in self.hiddenNodes:
+                # search input nodes
+                for node in self.inputNodes:
+                    if not self.isConnectionExist(node, hid):
+                        if self.probability(0.2):
+                            self.addConnection(node, hid)
+                # search hidden nodes
+                for hid2 in self.hiddenNodes:
+                    if hid.id != hid2.id and not self.isConnectionExist(hid, hid2):
+                        if self.probability(0.1):
+                            self.addConnection(hid, hid2)
+                # search output nodes
+                for node in self.outputNodes:
+                    if not self.isConnectionExist(hid, node):
+                        if self.probability(0.2):
+                            self.addConnection(hid, node)

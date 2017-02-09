@@ -9,6 +9,10 @@ neat.inputNodes[1].value = 1
 neat.forwardPropagation()
 neat.showStructure()
 
+neat.addHiddenNode("hidden node")
+neat.forwardPropagation()
+neat.showStructure()
+
 neat.mutation()
 neat.forwardPropagation()
 neat.showStructure()
