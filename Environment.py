@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 __author__ = 'Chason'
 
-from NEAT import *
-import copy
+from NEAT import NEAT
 
 class Environment:
-    def __init__(self,inputNum, outputNum, populationSize, maxGeneration):
-        self.inputNum = inputNum
-        self.outputNum = outputNum
+
+
+
+    def __init__(self,inputSize, outputSize, populationSize, maxGeneration):
+        self.inputSize = inputSize
+        self.outputSize = outputSize
         self.populationSize = populationSize
         self.maxGeneration = maxGeneration
-        self.genomes = [NEAT(i, inputNum, outputNum) for i in range(populationSize)]
-        self.innovation = [(inputNum + 1) * outputNum]
+        self.genomes = [NEAT(i, inputSize, outputSize) for i in range(populationSize)]
+        self.innovation = [(inputSize + 1) * outputSize]
 
     def matingGenome(self):
         pass
@@ -22,7 +24,7 @@ class Environment:
         for i in range(self.maxGeneration):
             # mutation
             for gen in self.genomes:
-                gen.mutation(self.innovation)
+                gen.mutation()
                 task.XorFitness(gen)
                 if  gen.fitness == task.bestFitness:
                     gen.showStructure()
@@ -30,7 +32,7 @@ class Environment:
             # killing bad genomes
             for k, gen in enumerate(self.genomes):
                 if gen.fitness <= 1 and len(gen.hiddenNodes) > 1:
-                    self.genomes[k] = NEAT(gen.id, self.inputNum, self.outputNum)
+                    self.genomes[k] = NEAT(gen.id, self.inputSize, self.outputSize)
         if showResult:
             maxHiddenNodes = 0
             print "Completed Genomes:"
@@ -42,7 +44,6 @@ class Environment:
 
     @staticmethod
     def test():
-        innovation = [3]
 
         neat = NEAT(0, 2, 1)
         neat.inputNodes[0].value = 1
@@ -54,10 +55,10 @@ class Environment:
         neat.forwardPropagation()
         neat.showStructure()
 
-        neat.mutation(innovation)
+        neat.mutation()
         neat.forwardPropagation()
         neat.showStructure()
 
-        neat.mutation(innovation)
+        neat.mutation()
         neat.forwardPropagation()
         neat.showStructure()

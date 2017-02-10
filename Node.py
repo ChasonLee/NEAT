@@ -5,3 +5,6 @@ class Node:
         self.id = id
         self.value = value
         self.tag = tag
+
+    def __eq__(self, other):
+        return self.id == other.id and self.tag == other.tag

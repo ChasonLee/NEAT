@@ -2,9 +2,12 @@
 __author__ = 'Chason'
 from Node import *
 from Connection import *
+# from Environment import Environment
+
 import math
 
 class NEAT:
+    connectionList = []
     @staticmethod
     def sigmoid(z):
         return 1.0 / (1.0 + math.exp(-z))
@@ -15,23 +18,24 @@ class NEAT:
 
     @staticmethod
     def probability(p):
+        "The probability of returning True is p and the probability of returning False is 1 - p"
         rnd = random.random()
         if rnd <= p:
             return True
         else:
             return False
 
-    def __init__(self, id, inputNum, outputNum):
+    def __init__(self, id, inputSize, outputSize):
         self.id = id
-        self.inputNum = inputNum
-        self.outputNum = outputNum
+        self.inputSize = inputSize
+        self.outputSize = outputSize
         self.fitness = 0
         self.biasNode = Node(id=0, tag='Bias Node', value=1)
         self.nodeCount = 1
 
         # input node
         self.inputNodes = []
-        for i in range(inputNum):
+        for i in range(inputSize):
             self.inputNodes.append(Node(id=self.nodeCount, tag='Input Node'))
             self.nodeCount += 1
 
@@ -40,26 +44,29 @@ class NEAT:
 
         # output node
         self.outputNodes = []
-        for j in range(outputNum):
+        for j in range(outputSize):
             self.outputNodes.append(Node(id=self.nodeCount, tag='Output Node'))
             self.nodeCount += 1
 
         # connection
-        innovation = 0
         self.connections = []
-        for i in range(inputNum):
-            for j in range(outputNum):
-                self.addConnection(innovation, self.inputNodes[i], self.outputNodes[j])
-                innovation += 1
+        for i in range(inputSize):
+            for j in range(outputSize):
+                self.addConnection(self.inputNodes[i], self.outputNodes[j])
+        for j in range(outputSize):
+            self.addConnection(self.biasNode, self.outputNodes[j])
 
-        for j in range(outputNum):
-            self.addConnection(innovation, self.biasNode, self.outputNodes[j])
-            innovation += 1
+    def lenConnections(self):
+        length = 0
+        for con in self.connections:
+            if con.enable:
+                length += 1
+        return length
 
     def showStructure(self):
         print "Genome %d(fitness = %d):"%(self.id, self.fitness)
         print "\tTotal Nodes:%d\tHidden Nodes:%d"%(self.nodeCount, len(self.hiddenNodes))
-        print "\tConnections(%d):"%len(self.connections)
+        print "\tEnabled Connections(%d):"%self.lenConnections()
         for con in self.connections:
             print "\t\t[%s %d] = %f\t**[%f]**\t[%s %d] = %f\tEnable = %s\tInnovation = %d"%(
                     con.input.tag, con.input.id, con.input.value,
@@ -82,12 +89,25 @@ class NEAT:
         for out in self.outputNodes:
             out.value = self.updateNode(out.id)
 
-    def addConnection(self, innovation, inputNode, outputNode, weight = None):
+    @staticmethod
+    def getInnovation(connection):
+        # check existed connection
+        for con in NEAT.connectionList:
+            if con == connection:
+                return con.innovation
+        # new innovation number
+        res = len(NEAT.connectionList)
+        NEAT.connectionList.append(connection)
+        return res
+
+    def addConnection(self, inputNode, outputNode, weight = None):
         if weight == None:
-            con = Connection(innovation, inputNode, outputNode)
+            con = Connection(input=inputNode, output=outputNode)
             con.randomWeight()
+            con.innovation = NEAT.getInnovation(con)
         else:
-            con = Connection(innovation, inputNode, outputNode, weight)
+            con = Connection(input=inputNode, output=outputNode, weight=weight)
+            con.innovation = NEAT.getInnovation(con)
         self.connections.append(con)
 
     def addHiddenNode(self, tag):
@@ -102,7 +122,7 @@ class NEAT:
                 return True
         return False
 
-    def mutation(self, innovation):
+    def mutation(self):
         if self.probability(0.6):
             # modify connections
             for con in self.connections:
@@ -118,28 +138,24 @@ class NEAT:
                     # add a new node
                     con.enable = False
                     node = self.addHiddenNode("Hidden Node")
-                    self.addConnection(innovation[0], con.input, node, 1)
-                    innovation[0] += 1
-                    self.addConnection(innovation[0], node, con.output, con.weight)
-                    innovation[0] += 1
-        else:
+                    self.addConnection(con.input, node, 1)
+                    self.addConnection(node, con.output, con.weight)
+
+        elif self.probability(0.7):
             # add new connections
             for hid in self.hiddenNodes:
                 # search input nodes
                 for node in self.inputNodes:
                     if not self.isConnectionExist(node, hid):
                         if self.probability(0.03):
-                            self.addConnection(innovation[0], node, hid)
-                            innovation[0] += 1
+                            self.addConnection(node, hid)
                 # search hidden nodes
                 for hid2 in self.hiddenNodes:
                     if hid.id != hid2.id and not self.isConnectionExist(hid, hid2):
                         if self.probability(0.03):
-                            self.addConnection(innovation[0], hid, hid2)
-                            innovation[0] += 1
+                            self.addConnection(hid, hid2)
                 # search output nodes
                 for node in self.outputNodes:
                     if not self.isConnectionExist(hid, node):
                         if self.probability(0.03):
-                            self.addConnection(innovation[0], hid, node)
-                            innovation[0] += 1
+                            self.addConnection(hid, node)

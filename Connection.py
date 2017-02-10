@@ -3,7 +3,7 @@ __author__ = 'Chason'
 import random
 
 class Connection:
-    def __init__(self,innovation, input, output, weight = None, enable = True):
+    def __init__(self, input, output, weight = None, innovation = None, enable = True):
         self.input = input
         self.output = output
         if weight != None:
@@ -12,6 +12,9 @@ class Connection:
             self.weight = self.randomWeight()
         self.enable = enable
         self.innovation = innovation
+
+    def __eq__(self, other):
+        return self.input == other.input and self.output == other.output
 
     def randomWeight(self):
         self.weight = random.uniform(-10, 10)
