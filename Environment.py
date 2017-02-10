@@ -18,29 +18,26 @@ class Environment:
 
     def run(self, task, showResult=False):
         print "Running Environment..."
+        completedGenomes = []
         for i in range(self.maxGeneration):
             # mutation
             for gen in self.genomes:
                 gen.mutation(self.innovation)
                 task.XorFitness(gen)
                 if  gen.fitness == task.bestFitness:
-                    fitness = gen.fitness
-                    print "best fitness:", fitness
                     gen.showStructure()
+                    completedGenomes.append(gen)
             # killing bad genomes
             for k, gen in enumerate(self.genomes):
-                if gen.fitness <= 1 and len(gen.hiddenNodes) > 0:
+                if gen.fitness <= 1 and len(gen.hiddenNodes) > 1:
                     self.genomes[k] = NEAT(gen.id, self.inputNum, self.outputNum)
         if showResult:
-            bestFitness = 0
             maxHiddenNodes = 0
-            for gen in self.genomes:
+            print "Completed Genomes:"
+            for gen in completedGenomes:
                 gen.showStructure()
-                if bestFitness < gen.fitness:
-                    bestFitness = gen.fitness
                 if maxHiddenNodes < len(gen.hiddenNodes):
                     maxHiddenNodes = len(gen.hiddenNodes)
-            print "Best fitness = %d"%bestFitness
             print "Max hidden nodes = %d"%maxHiddenNodes
 
     @staticmethod
