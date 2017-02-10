@@ -5,6 +5,22 @@ from Connection import *
 import math
 
 class NEAT:
+    @staticmethod
+    def sigmoid(z):
+        return 1.0 / (1.0 + math.exp(-z))
+
+    @staticmethod
+    def tanh(z):
+        return (math.exp(z) - math.exp(-z)) / (math.exp(z) + math.exp(-z))
+
+    @staticmethod
+    def probability(p):
+        rnd = random.random()
+        if rnd <= p:
+            return True
+        else:
+            return False
+
     def __init__(self, id, inputNum, outputNum):
         self.id = id
         self.inputNum = inputNum
@@ -40,15 +56,6 @@ class NEAT:
             self.addConnection(innovation, self.biasNode, self.outputNodes[j])
             innovation += 1
 
-    def addConnection(self, innovation, inputNode, outputNode, weight = None):
-        if weight == None:
-            con = Connection(innovation, inputNode, outputNode)
-            con.randomWeight()
-        else:
-            con = Connection(innovation, inputNode, outputNode, weight)
-        self.connections.append(con)
-
-
     def showStructure(self):
         print "Genome %d(fitness = %d):"%(self.id, self.fitness)
         print "\tTotal Nodes:%d\tHidden Nodes:%d"%(self.nodeCount, len(self.hiddenNodes))
@@ -60,12 +67,6 @@ class NEAT:
                     con.output.tag, con.output.id, con.output.value,
                     con.enable, con.innovation)
         print
-
-    def sigmoid(self, z):
-        return 1.0 / (1.0 + math.exp(-z))
-
-    def tanh(self, z):
-        return (math.exp(z) - math.exp(-z)) / (math.exp(z) + math.exp(-z))
 
     def updateNode(self, id):
         sum = 0
@@ -81,12 +82,13 @@ class NEAT:
         for out in self.outputNodes:
             out.value = self.updateNode(out.id)
 
-    def probability(self, p):
-        rnd = random.random()
-        if rnd <= p:
-            return True
+    def addConnection(self, innovation, inputNode, outputNode, weight = None):
+        if weight == None:
+            con = Connection(innovation, inputNode, outputNode)
+            con.randomWeight()
         else:
-            return False
+            con = Connection(innovation, inputNode, outputNode, weight)
+        self.connections.append(con)
 
     def addHiddenNode(self, tag):
         node = Node(self.nodeCount, tag=tag)
@@ -106,13 +108,13 @@ class NEAT:
             for con in self.connections:
                 if self.probability(0.9):
                     # connection weight mutate
-                    if self.probability(0.9):
+                    if self.probability(0.7):
                         # uniformly perturb
-                        con.weight += random.uniform(-2, 2)
+                        con.weight += random.uniform(-3, 3)
                     else:
                         # assign a new random weight
                         con.randomWeight()
-                elif self.probability(0.05):
+                elif self.probability(0.03):
                     # add a new node
                     con.enable = False
                     node = self.addHiddenNode("Hidden Node")
@@ -126,18 +128,18 @@ class NEAT:
                 # search input nodes
                 for node in self.inputNodes:
                     if not self.isConnectionExist(node, hid):
-                        if self.probability(0.05):
+                        if self.probability(0.03):
                             self.addConnection(innovation[0], node, hid)
                             innovation[0] += 1
                 # search hidden nodes
                 for hid2 in self.hiddenNodes:
                     if hid.id != hid2.id and not self.isConnectionExist(hid, hid2):
-                        if self.probability(0.05):
+                        if self.probability(0.03):
                             self.addConnection(innovation[0], hid, hid2)
                             innovation[0] += 1
                 # search output nodes
                 for node in self.outputNodes:
                     if not self.isConnectionExist(hid, node):
-                        if self.probability(0.05):
+                        if self.probability(0.03):
                             self.addConnection(innovation[0], hid, node)
                             innovation[0] += 1
