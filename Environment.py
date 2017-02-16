@@ -18,34 +18,40 @@ class Environment(object):
         self.population_size = population_size
         self.max_generation = max_generation
         self.genomes = [NEAT(i, input_size, output_size) for i in range(population_size)]
-
+        self.outcomes = []
+        self.generation_iter = 0
     def mating_genomes(self):
         pass
 
+    def add_outcome(self, genome):
+        self.outcomes.append(genome)
+        print "Generation:%d\tFound outcome %d,\thidden node = %d,\tconnections = %d"%(self.generation_iter,
+                                                                                       len(self.outcomes),
+                                                                                       len(genome.hidden_nodes),
+                                                                                       genome.connection_count())
+
     def run(self, task, showResult=False):
         """Run the environment."""
-        print "Running Environment..."
+        print "Running Environment...(population size = %d, max generation = %d)"%(self.population_size, self.max_generation)
         completed_genomes = []
-        for i in range(self.max_generation):
+        for self.generation_iter in range(self.max_generation):
             # mutation
-            for gen in self.genomes:
+            for k,gen in enumerate(self.genomes):
                 gen.mutation()
                 task.xor_fitness(gen)
+                # collecting outcomes
                 if  gen.fitness == task.best_fitness:
-                    gen.show_structure()
-                    completed_genomes.append(gen)
+                    self.add_outcome(gen)
+                    self.genomes[k] = NEAT(gen.id, self.input_size, self.output_size)
             # killing bad genomes
             for k, gen in enumerate(self.genomes):
                 if gen.fitness <= 1 and len(gen.hidden_nodes) > 1:
                     self.genomes[k] = NEAT(gen.id, self.input_size, self.output_size)
         if showResult:
-            max_hidden_nodes = 0
             print "Completed Genomes:"
-            for gen in completed_genomes:
+            self.outcomes.sort(key=lambda NEAT:NEAT.hidden_nodes)
+            for gen in self.outcomes:
                 gen.show_structure()
-                if max_hidden_nodes < len(gen.hidden_nodes):
-                    max_hidden_nodes = len(gen.hidden_nodes)
-            print "Max hidden nodes = %d"%max_hidden_nodes
 
     @staticmethod
     def test():

@@ -162,19 +162,24 @@ class NEAT(object):
 
         elif self.probability(0.7):
             # add new connections
+            new_con_pro = 0.03
             for hid in self.hidden_nodes:
+                # consider bias node
+                if not self.does_connection_exist(self.bias_node, hid):
+                    if self.probability(new_con_pro):
+                        self.add_connection(self.bias_node, hid)
                 # search input nodes
                 for node in self.input_nodes:
                     if not self.does_connection_exist(node, hid):
-                        if self.probability(0.03):
+                        if self.probability(new_con_pro):
                             self.add_connection(node, hid)
                 # search hidden nodes
                 for hid2 in self.hidden_nodes:
                     if hid.id != hid2.id and not self.does_connection_exist(hid, hid2):
-                        if self.probability(0.03):
+                        if self.probability(new_con_pro):
                             self.add_connection(hid, hid2)
                 # search output nodes
                 for node in self.output_nodes:
                     if not self.does_connection_exist(hid, node):
-                        if self.probability(0.03):
+                        if self.probability(new_con_pro):
                             self.add_connection(hid, node)

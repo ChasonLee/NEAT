@@ -21,10 +21,10 @@ class XorTest(object):
         genome.fitness = fitness
 
 def main(argv=None):
-    env = Environment(input_size=2, output_size=1, population_size=10000, max_generation=200)
+    env = Environment(input_size=2, output_size=1, population_size=10000, max_generation=150)
 
     # env.test()
-    env.run(task=XorTest, showResult=False)
+    env.run(task=XorTest, showResult=True)
 
 if __name__ == "__main__":
     sys.exit(main())
