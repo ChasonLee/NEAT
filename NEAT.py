@@ -167,27 +167,27 @@ class NEAT(object):
 
     def mutation(self):
         """Let the neural network randomly mutate."""
-        if self.probability(0.6):
+        if self.probability(0.9):
             # modify connections
             for con in self.connections:
-                if self.probability(0.9):
+                if self.probability(0.995):
                     # connection weight mutate
-                    if self.probability(0.7):
+                    if self.probability(0.8):
                         # uniformly perturb
                         con.weight += random.uniform(-3, 3)
                     else:
                         # assign a new random weight
                         con.random_weight()
-                elif self.probability(0.03):
+                else:
                     # add a new node
                     con.enable = False
                     node = self.add_hidden_node()
                     self.add_connection(con.input, node, 1)
                     self.add_connection(node, con.output, con.weight)
 
-        elif self.probability(0.7):
+        else:
             # add new connections
-            new_con_pro = 0.03
+            new_con_pro = 0.01
             for hid in self.hidden_nodes:
                 # consider bias node
                 if not self.does_connection_exist(self.bias_node, hid):

@@ -23,18 +23,23 @@ class Environment(object):
         self.outcomes = []
         self.generation_iter = 0
 
-    def produce_offspring(self):
-        offspring = NEAT(self.population, self.input_size, self.output_size, offspring=True)
+    def produce_offspring(self, genome=None):
+        if genome == None:
+            offspring = NEAT(self.population, self.input_size, self.output_size, offspring=True)
+        else:
+            offspring = copy.deepcopy(genome)
+            offspring.id = self.population
         self.genomes.append(offspring)
         self.population += 1
         return offspring
 
     def add_outcome(self, genome):
-        self.outcomes.append(genome)
-        print "Generation:%d\tFound outcome %d,\thidden node = %d,\tconnections = %d"%(self.generation_iter,
-                                                                                       len(self.outcomes),
-                                                                                       len(genome.hidden_nodes),
-                                                                                       genome.connection_count())
+        gen = copy.deepcopy(genome)
+        self.outcomes.append(gen)
+        # print "Generation:%d\tFound outcome %d,\thidden node = %d,\tconnections = %d"%(self.generation_iter,
+        #                                                                                len(self.outcomes),
+        #                                                                                len(gen.hidden_nodes),
+        #                                                                                gen.connection_count())
 
     def mating_pair(self, pair):
         p1 = pair[0]
@@ -79,7 +84,8 @@ class Environment(object):
     def mating_genomes(self):
         mating_pool = []
         for k, gen in enumerate(self.genomes):
-            if NEAT.probability(0.01 * gen.fitness):
+            # The higher the fitness, the higher the probability of mating.
+            if NEAT.probability(0.08 * gen.fitness ** 2):
                 mating_pool.append(gen)
 
         while len(mating_pool) > 1:
@@ -90,21 +96,28 @@ class Environment(object):
 
     def mutation(self, task):
         for k, gen in enumerate(self.genomes):
-            gen.mutation()
-            task.xor_fitness(gen)
+            if gen.fitness < task.best_fitness:
+                if NEAT.probability(0.25):
+                    offspring = self.produce_offspring(gen)
+                    offspring.mutation()
+                    task.xor_fitness(offspring)
+                else:
+                    gen.mutation()
+                    task.xor_fitness(gen)
             # collecting outcomes
-            if gen.fitness == task.best_fitness:
-                self.add_outcome(gen)
-                self.genomes[k] = NEAT(gen.id, self.input_size, self.output_size)
+
 
     def kill_bad_genomes(self):
-        for k, gen in enumerate(self.genomes):
-            if gen.fitness <= 1 and len(gen.hidden_nodes) > 1:
-                self.genomes[k] = NEAT(gen.id, self.input_size, self.output_size)
+        # for k, gen in enumerate(self.genomes):
+        #     if gen.fitness <= 1 and len(gen.hidden_nodes) > 1:
+        #         self.genomes.remove(gen)
+        self.genomes.sort(key=lambda NEAT:NEAT.fitness, reverse=True)
+        self.genomes = self.genomes[:150]
+        self.population = len(self.genomes)
 
     def run(self, task, showResult=False):
         """Run the environment."""
-        print "Running Environment...(population size = %d, max generation = %d)"%(self.population, self.max_generation)
+        print "Running Environment...(Initial population = %d, Maximum generation = %d)"%(self.population, self.max_generation)
         # generational change
         for self.generation_iter in range(self.max_generation):
             # mating genomes
@@ -113,16 +126,43 @@ class Environment(object):
             # mutation
             self.mutation(task)
 
+            outcomes = [gen for gen in self.genomes if gen.fitness == task.best_fitness]
+            genome_len = len(self.genomes)
+            avg_hid = 0.0
+            avg_con = 0.0
+            if genome_len > 0:
+                for gen in self.genomes:
+                    avg_hid += len(gen.hidden_nodes)
+                    avg_con += gen.connection_count()
+                avg_hid /= genome_len
+                avg_con /= genome_len
+            print "Generation %d:\tpopulation = %d,\tAvg Hidden node = %f,\tAvg Connection = %f,\toutcome = %d"%(
+                self.generation_iter,
+                self.population,
+                avg_hid,
+                avg_con,
+                len(outcomes))
+
             # killing bad genomes
             self.kill_bad_genomes()
-
+        for gen in self.genomes:
+            if gen.fitness == task.best_fitness:
+                self.add_outcome(gen)
+                # self.genomes[k] = NEAT(gen.id, self.input_size, self.output_size)
         if showResult:
             print "Completed Genomes:"
             self.outcomes.sort(key=lambda NEAT:NEAT.hidden_nodes)
-            for gen in self.outcomes:
-                gen.show_structure()
-
-            print "Population: %d"%self.population
+            outcomes_len = len(self.outcomes)
+            avg_hid = 0.0
+            avg_con = 0.0
+            if outcomes_len > 0:
+                for gen in self.outcomes:
+                    gen.show_structure()
+                    avg_hid += len(gen.hidden_nodes)
+                    avg_con += gen.connection_count()
+                avg_hid /= outcomes_len
+                avg_con /= outcomes_len
+            print "Population: %d,\tAverage Hidden node = %f,\tAverage Connection = %f"%(self.population, avg_hid, avg_con)
 
     @staticmethod
     def test():

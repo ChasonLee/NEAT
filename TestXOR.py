@@ -21,7 +21,7 @@ class XorTest(object):
         genome.fitness = fitness
 
 def main(argv=None):
-    env = Environment(input_size=2, output_size=1, init_population=1000, max_generation=150)
+    env = Environment(input_size=2, output_size=1, init_population=150, max_generation=100)
 
     # env.test()
     env.run(task=XorTest, showResult=True)
