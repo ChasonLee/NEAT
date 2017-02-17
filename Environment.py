@@ -3,6 +3,7 @@ __author__ = 'Chason'
 
 from NEAT import NEAT
 import random
+import copy
 
 class Environment(object):
     """This is an ecological environment that can control the propagation of evolutionary neural networks.
@@ -13,14 +14,20 @@ class Environment(object):
         max_generation: The maximum number of genomes generations
         genomes: The list of NEAT(NeuroEvolution of Augmenting Topologies)
     """
-    def __init__(self,input_size, output_size, population_size, max_generation):
+    def __init__(self,input_size, output_size, init_population, max_generation):
         self.input_size = input_size
         self.output_size = output_size
-        self.population_size = population_size
+        self.population = init_population
         self.max_generation = max_generation
-        self.genomes = [NEAT(i, input_size, output_size) for i in range(population_size)]
+        self.genomes = [NEAT(i, input_size, output_size) for i in range(init_population)]
         self.outcomes = []
         self.generation_iter = 0
+
+    def produce_offspring(self):
+        offspring = NEAT(self.population, self.input_size, self.output_size, offspring=True)
+        self.genomes.append(offspring)
+        self.population += 1
+        return offspring
 
     def add_outcome(self, genome):
         self.outcomes.append(genome)
@@ -30,12 +37,44 @@ class Environment(object):
                                                                                        genome.connection_count())
 
     def mating_pair(self, pair):
-        p1 = pair[0].connections.sort(key=lambda Connection:Connection.innovation)
-        p2 = pair[1].connections.sort(key=lambda Connection:Connection.innovation)
-        p1_len = len(p1)
-        p2_len = len(p2)
-        max_len = max(p1_len, p2_len)
-        # to be continue
+        p1 = pair[0]
+        p2 = pair[1]
+        p1_len = len(p1.connections)
+        p2_len = len(p2.connections)
+        offspring = self.produce_offspring()
+
+        # Generate the same number of nodes as the larger genome
+        max_hidden_node = max(len(p1.hidden_nodes), len(p2.hidden_nodes))
+        for i in range(max_hidden_node):
+            offspring.add_hidden_node()
+
+        # Crossing over
+        i, j = 0, 0
+        while i < p1_len or j < p2_len:
+            if i < p1_len and j < p2_len:
+                if p1.connections[i].innovation == p2.connections[j].innovation:
+                    if NEAT.probability(0.5):
+                        con = p1.connections[i]
+                    else:
+                        con = p2.connections[j]
+                    i += 1
+                    j += 1
+                elif p1.connections[i].innovation < p2.connections[j].innovation:
+                    con = p1.connections[i]
+                    i += 1
+                else:
+                    con = p2.connections[j]
+                    j += 1
+            elif i >= p1_len:
+                con = p2.connections[j]
+                j += 1
+            else:
+                con = p1.connections[i]
+                i += 1
+            offspring.add_connection_id(input_node_id=con.input.id,
+                                        output_node_id=con.output.id,
+                                        weight=con.weight,
+                                        enable=con.enable)
 
     def mating_genomes(self):
         mating_pool = []
@@ -43,7 +82,7 @@ class Environment(object):
             if NEAT.probability(0.01 * gen.fitness):
                 mating_pool.append(gen)
 
-        while len(mating_pool) > 0:
+        while len(mating_pool) > 1:
             pair = random.sample(mating_pool, 2)
             self.mating_pair(pair)
             for p in pair:
@@ -65,9 +104,11 @@ class Environment(object):
 
     def run(self, task, showResult=False):
         """Run the environment."""
-        print "Running Environment...(population size = %d, max generation = %d)"%(self.population_size, self.max_generation)
+        print "Running Environment...(population size = %d, max generation = %d)"%(self.population, self.max_generation)
         # generational change
         for self.generation_iter in range(self.max_generation):
+            # mating genomes
+            self.mating_genomes()
 
             # mutation
             self.mutation(task)
@@ -80,6 +121,8 @@ class Environment(object):
             self.outcomes.sort(key=lambda NEAT:NEAT.hidden_nodes)
             for gen in self.outcomes:
                 gen.show_structure()
+
+            print "Population: %d"%self.population
 
     @staticmethod
     def test():

@@ -37,7 +37,7 @@ class NEAT(object):
         """Input range:0 <= p <= 1;The probability of returning True is p, and False is 1 - p"""
         return random.random() <= p
 
-    def __init__(self, id, input_size, output_size):
+    def __init__(self, id, input_size, output_size, offspring=False):
         self.id = id
         self.input_size = input_size
         self.output_size = output_size
@@ -62,11 +62,12 @@ class NEAT(object):
 
         # connection
         self.connections = []
-        for i in range(input_size):
+        if not offspring:
+            for i in range(input_size):
+                for j in range(output_size):
+                    self.add_connection(self.input_nodes[i], self.output_nodes[j])
             for j in range(output_size):
-                self.add_connection(self.input_nodes[i], self.output_nodes[j])
-        for j in range(output_size):
-            self.add_connection(self.bias_node, self.output_nodes[j])
+                self.add_connection(self.bias_node, self.output_nodes[j])
 
     def connection_count(self):
         """Counts the number of connections enabled in NEAT."""
@@ -115,16 +116,40 @@ class NEAT(object):
         NEAT.connection_list.append(connection)
         return res
 
-    def add_connection(self, inputNode, outputNode, weight = None):
+    def get_node_by_id(self, id):
+        nodes = self.hidden_nodes
+        if id == 0:
+            return self.bias_node
+        elif id <= len(self.input_nodes):
+            nodes = self.input_nodes
+        elif id <= self.input_size + self.output_size:
+            nodes = self.output_nodes
+        for node in nodes:
+            if node.id == id:
+                return node
+
+    def add_connection_id(self, input_node_id, output_node_id, weight=None, enable=True):
+        """Add a new connection by nodes id. If the weights are not set, the weights are set at random."""
+        input_node = self.get_node_by_id(input_node_id)
+        output_node = self.get_node_by_id(output_node_id)
+        self.add_connection(input_node, output_node, weight, enable)
+
+    def add_connection(self, input_node, output_node, weight=None, enable=True):
         """Add a new connection. If the weights are not set, the weights are set at random."""
         if weight == None:
-            con = Connection(input=inputNode, output=outputNode)
+            con = Connection(input=input_node, output=output_node, enable=enable)
             con.random_weight()
             con.innovation = NEAT.get_innovation(con)
         else:
-            con = Connection(input=inputNode, output=outputNode, weight=weight)
+            con = Connection(input=input_node, output=output_node, weight=weight)
             con.innovation = NEAT.get_innovation(con)
-        self.connections.append(con)
+        # Insert sorting
+        inx = len(self.connections) - 1
+        while inx >= 0:
+            if self.connections[inx].innovation <= con.innovation:
+                break
+            inx -= 1
+        self.connections.insert(inx + 1, con)
 
     def add_hidden_node(self, tag="Hidden Node"):
         """Add a new hidden node. The default tag is 'Hidden Node'."""
