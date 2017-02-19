@@ -106,13 +106,15 @@ class Environment(object):
                     task.xor_fitness(gen)
             # collecting outcomes
 
+    def speciation(self):
+        pass
 
     def kill_bad_genomes(self):
         # for k, gen in enumerate(self.genomes):
         #     if gen.fitness <= 1 and len(gen.hidden_nodes) > 1:
         #         self.genomes.remove(gen)
         self.genomes.sort(key=lambda NEAT:NEAT.fitness, reverse=True)
-        self.genomes = self.genomes[:150]
+        self.genomes = self.genomes[:200]
         self.population = len(self.genomes)
 
     def run(self, task, showResult=False):

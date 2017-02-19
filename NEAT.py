@@ -167,10 +167,10 @@ class NEAT(object):
 
     def mutation(self):
         """Let the neural network randomly mutate."""
-        if self.probability(0.9):
+        if self.probability(0.95):
             # modify connections
             for con in self.connections:
-                if self.probability(0.995):
+                if self.probability(0.998):
                     # connection weight mutate
                     if self.probability(0.8):
                         # uniformly perturb
