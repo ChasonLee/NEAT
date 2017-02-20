@@ -171,11 +171,7 @@ class NEAT(object):
             # modify connections
             add_node_flag = False
             for con in self.connections:
-<<<<<<< HEAD
                 if self.probability(0.99):
-=======
-                if self.probability(0.998):
->>>>>>> dff3662eb63e0a15937472debe38231da2db25e0
                     # connection weight mutate
                     if self.probability(0.8):
                         # uniformly perturb
