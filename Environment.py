@@ -20,6 +20,7 @@ class Environment(object):
         self.population = init_population
         self.max_generation = max_generation
         self.genomes = [NEAT(i, input_size, output_size) for i in range(init_population)]
+        self.next_generation = []
         self.outcomes = []
         self.generation_iter = 0
 
@@ -29,8 +30,8 @@ class Environment(object):
         else:
             offspring = copy.deepcopy(genome)
             offspring.id = self.population
-        self.genomes.append(offspring)
-        self.population += 1
+        self.next_generation.append(offspring)
+        # self.population += 1
         return offspring
 
     def add_outcome(self, genome):
@@ -85,7 +86,7 @@ class Environment(object):
         mating_pool = []
         for k, gen in enumerate(self.genomes):
             # The higher the fitness, the higher the probability of mating.
-            if NEAT.probability(0.08 * gen.fitness ** 2):
+            if NEAT.probability(0.2 * (gen.fitness * 2)):
                 mating_pool.append(gen)
 
         while len(mating_pool) > 1:
@@ -97,7 +98,7 @@ class Environment(object):
     def mutation(self, task):
         for k, gen in enumerate(self.genomes):
             if gen.fitness < task.best_fitness:
-                if NEAT.probability(0.25):
+                if NEAT.probability(0.2):
                     offspring = self.produce_offspring(gen)
                     offspring.mutation()
                     task.xor_fitness(offspring)
@@ -120,6 +121,8 @@ class Environment(object):
         print "Running Environment...(Initial population = %d, Maximum generation = %d)"%(self.population, self.max_generation)
         # generational change
         for self.generation_iter in range(self.max_generation):
+            self.next_generation = []
+
             # mating genomes
             self.mating_genomes()
 
@@ -130,21 +133,32 @@ class Environment(object):
             genome_len = len(self.genomes)
             avg_hid = 0.0
             avg_con = 0.0
+            hidden_distribution = [0]
             if genome_len > 0:
                 for gen in self.genomes:
                     avg_hid += len(gen.hidden_nodes)
                     avg_con += gen.connection_count()
+                    hid = len(gen.hidden_nodes)
+                    while hid >= len(hidden_distribution):
+                        hidden_distribution.append(0)
+                    hidden_distribution[hid] += 1
                 avg_hid /= genome_len
                 avg_con /= genome_len
-            print "Generation %d:\tpopulation = %d,\tAvg Hidden node = %f,\tAvg Connection = %f,\toutcome = %d"%(
+            print "Generation %d:\tpopulation = %d,\tAvg Hidden = %f,\tAvg Connection = %f,\toutcome = %d,\t%s"%(
                 self.generation_iter,
                 self.population,
                 avg_hid,
                 avg_con,
-                len(outcomes))
+                len(outcomes),
+                hidden_distribution)
+
+            self.genomes.sort(key=lambda NEAT: NEAT.fitness, reverse=True)
+            self.genomes = self.genomes[:50] + self.next_generation + \
+                           [NEAT(i, self.input_size, self.output_size) for i in range(20)]
+            self.population = len(self.genomes)
 
             # killing bad genomes
-            self.kill_bad_genomes()
+            # self.kill_bad_genomes()
         for gen in self.genomes:
             if gen.fitness == task.best_fitness:
                 self.add_outcome(gen)
