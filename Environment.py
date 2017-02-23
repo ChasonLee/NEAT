@@ -110,12 +110,18 @@ class Environment(object):
     def speciation(self):
         pass
 
-    def kill_bad_genomes(self):
+    def surviving_rule(self):
         # for k, gen in enumerate(self.genomes):
         #     if gen.fitness <= 1 and len(gen.hidden_nodes) > 1:
         #         self.genomes.remove(gen)
-        self.genomes.sort(key=lambda NEAT:NEAT.fitness, reverse=True)
-        self.genomes = self.genomes[:200]
+        # self.genomes.sort(key=lambda NEAT:NEAT.fitness, reverse=True)
+        # self.genomes = self.genomes[:200]
+        # self.population = len(self.genomes)
+        self.genomes.sort(key=lambda NEAT: NEAT.fitness, reverse=True)
+        self.genomes = self.genomes[:40] + self.next_generation + [NEAT(i,
+                                                                        self.input_size,
+                                                                        self.output_size)
+                                                                   for i in range(20)]
         self.population = len(self.genomes)
 
     def run(self, task, showResult=False):
@@ -131,6 +137,7 @@ class Environment(object):
             # mutation
             self.mutation(task)
 
+            # logging outcome information
             outcomes = [gen for gen in self.genomes if gen.fitness == task.best_fitness]
             genome_len = len(self.genomes)
             avg_hid = 0.0
@@ -154,13 +161,9 @@ class Environment(object):
                 len(outcomes),
                 hidden_distribution)
 
-            self.genomes.sort(key=lambda NEAT: NEAT.fitness, reverse=True)
-            self.genomes = self.genomes[:50] + self.next_generation + \
-                           [NEAT(i, self.input_size, self.output_size) for i in range(20)]
-            self.population = len(self.genomes)
-
             # killing bad genomes
-            # self.kill_bad_genomes()
+            self.surviving_rule()
+
         for gen in self.genomes:
             if gen.fitness == task.best_fitness:
                 self.add_outcome(gen)
