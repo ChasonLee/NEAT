@@ -2,7 +2,6 @@
 __author__ = 'Chason'
 from Node import *
 from Connection import *
-# from Environment import Environment
 
 import math
 
@@ -167,45 +166,42 @@ class NEAT(object):
 
     def mutation(self):
         """Let the neural network randomly mutate."""
-        if self.probability(0.95):
-            # modify connections
-            add_node_flag = False
+        if self.probability(0.8):
+            # modify connection
             for con in self.connections:
-                if self.probability(0.99):
-                    # connection weight mutate
-                    if self.probability(0.8):
-                        # uniformly perturb
-                        con.weight += random.uniform(-5, 5)
-                    else:
-                        # assign a new random weight
-                        con.random_weight()
-                elif not add_node_flag:
-                    # add a new node
-                    con.enable = False
-                    node = self.add_hidden_node()
-                    self.add_connection(con.input, node, 1)
-                    self.add_connection(node, con.output, con.weight)
-                    add_node_flag = True
-        else:
-            # add new connections
-            new_con_pro = 0.03
+                if self.probability(0.9):
+                    # uniformly perturb
+                    con.weight += random.uniform(-1, 1)
+                else:
+                    # assign a new random weight
+                    con.random_weight()
+
+        if self.probability(0.05):
             for hid in self.hidden_nodes:
                 # consider bias node
                 if not self.does_connection_exist(self.bias_node, hid):
-                    if self.probability(new_con_pro):
-                        self.add_connection(self.bias_node, hid)
+                    self.add_connection(self.bias_node, hid)
+                    break
                 # search input nodes
                 for node in self.input_nodes:
                     if not self.does_connection_exist(node, hid):
-                        if self.probability(new_con_pro):
-                            self.add_connection(node, hid)
+                        self.add_connection(node, hid)
+                        return
                 # search hidden nodes
                 for hid2 in self.hidden_nodes:
                     if hid.id != hid2.id and not self.does_connection_exist(hid, hid2):
-                        if self.probability(new_con_pro):
-                            self.add_connection(hid, hid2)
+                        self.add_connection(hid, hid2)
+                        return
                 # search output nodes
                 for node in self.output_nodes:
                     if not self.does_connection_exist(hid, node):
-                        if self.probability(new_con_pro):
-                            self.add_connection(hid, node)
+                        self.add_connection(hid, node)
+                        return
+
+        if self.probability(0.02):
+            # add a new node
+            con = random.choice(self.connections)
+            con.enable = False
+            node = self.add_hidden_node()
+            self.add_connection(con.input, node, 1)
+            self.add_connection(node, con.output, con.weight)

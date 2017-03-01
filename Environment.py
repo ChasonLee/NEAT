@@ -106,6 +106,8 @@ class Environment(object):
                     gen.mutation()
                     task.xor_fitness(gen)
             # collecting outcomes
+    def compatibility(self, gen1, gen2):
+        pass
 
     def speciation(self):
         pass
@@ -121,7 +123,7 @@ class Environment(object):
         self.genomes = self.genomes[:40] + self.next_generation + [NEAT(i,
                                                                         self.input_size,
                                                                         self.output_size)
-                                                                   for i in range(20)]
+                                                                   for i in range(10)]
         self.population = len(self.genomes)
 
     def run(self, task, showResult=False):
@@ -153,7 +155,7 @@ class Environment(object):
                     hidden_distribution[hid] += 1
                 avg_hid /= genome_len
                 avg_con /= genome_len
-            print "Generation %d:\tpopulation = %d,\tAvg Hidden = %f,\tAvg Connection = %f,\toutcome = %d,\t%s"%(
+            print "Generation %d:\tpopulation = %d,\tAvg Hidden = %f,\tAvg Connection = %f,\toutcome = %d,\thidden node distribution:%s"%(
                 self.generation_iter + 1,
                 self.population,
                 avg_hid,
