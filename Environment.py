@@ -154,7 +154,7 @@ class Environment(object):
                 avg_hid /= genome_len
                 avg_con /= genome_len
             print "Generation %d:\tpopulation = %d,\tAvg Hidden = %f,\tAvg Connection = %f,\toutcome = %d,\t%s"%(
-                self.generation_iter,
+                self.generation_iter + 1,
                 self.population,
                 avg_hid,
                 avg_con,

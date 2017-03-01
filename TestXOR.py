@@ -3,9 +3,12 @@ __author__ = 'Chason'
 
 from Environment import *
 import sys
+import argparse
 
 class XorTest(object):
     best_fitness = 4
+    input_size = 2
+    output_size = 1
     @staticmethod
     def xor_fitness(genome):
         fitness = 0
@@ -20,11 +23,28 @@ class XorTest(object):
                 fitness += 1
         genome.fitness = fitness
 
-def main(argv=None):
-    env = Environment(input_size=2, output_size=1, init_population=150, max_generation=100)
+def main(args=None):
+    env = Environment(input_size=XorTest.input_size,
+                      output_size=XorTest.output_size,
+                      init_population=args.pop,
+                      max_generation=args.gen)
 
     # env.test()
     env.run(task=XorTest, showResult=True)
 
 if __name__ == "__main__":
-    sys.exit(main())
+    parser = argparse.ArgumentParser(description='Change the environment parameters.')
+    parser.add_argument(
+        '--pop',
+        default=150,
+        type=int,
+        help='The initial population size.'
+    )
+    parser.add_argument(
+        '--gen',
+        default=100,
+        type=int,
+        help='The maximum generations.'
+    )
+    args = parser.parse_args()
+    sys.exit(main(args))
