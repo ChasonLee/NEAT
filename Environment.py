@@ -14,23 +14,29 @@ class Environment(object):
         max_generation: The maximum number of genomes generations
         genomes: The list of NEAT(NeuroEvolution of Augmenting Topologies)
     """
-    def __init__(self,input_size, output_size, init_population, max_generation):
+    def __init__(self,input_size, output_size, init_population, max_generation, task):
         self.input_size = input_size
         self.output_size = output_size
         self.population = init_population
         self.max_generation = max_generation
-        self.genomes = [NEAT(i, input_size, output_size) for i in range(init_population)]
+        # self.genomes = [NEAT(i, input_size, output_size) for i in range(init_population)]
         self.next_generation = []
         self.outcomes = []
         self.generation_iter = 0
-        self.species = [[]]
-        self.delta_t = 5
+        self.species = [[NEAT(i, input_size, output_size) for i in range(init_population)]]
+        self.comp_threshold = 1.0
+        self.avg_comp_num = 50
+        self.evaluation = init_population
+        for sp in self.species:
+            for gen in sp:
+                task.xor_fitness(gen)
 
     def produce_offspring(self, genome):
         """Produce a new offspring."""
         offspring = copy.deepcopy(genome)
-        offspring.id = self.population
+        offspring.id = self.evaluation
         self.next_generation.append(offspring)
+        self.evaluation += 1
         return offspring
 
     def add_outcome(self, genome):
@@ -48,7 +54,7 @@ class Environment(object):
         p2 = pair[1]
         p1_len = len(p1.connections)
         p2_len = len(p2.connections)
-        offspring = self.produce_offspring(NEAT(self.population, self.input_size, self.output_size, offspring=True))
+        offspring = self.produce_offspring(NEAT(self.evaluation, self.input_size, self.output_size, offspring=True))
 
         # Generate the same number of nodes as the larger genome
         max_hidden_node = max(len(p1.hidden_nodes), len(p2.hidden_nodes))
@@ -82,34 +88,38 @@ class Environment(object):
                                         output_node_id=con.output.id,
                                         weight=con.weight,
                                         enable=con.enable)
+        return offspring
 
     def mating_genomes(self):
         """Randomly mating two genomes."""
         mating_pool = []
-        for k, gen in enumerate(self.genomes):
-            # The higher the fitness, the higher the probability of mating.
-            if NEAT.probability(0.2 * (gen.fitness * 2)):
-                mating_pool.append(gen)
+        for sp in self.species:
+            for gen in sp:
+                # The higher the fitness, the higher the probability of mating.
+                if NEAT.probability(0.09 * (gen.fitness ** 2)):
+                    mating_pool.append(gen)
 
-        while len(mating_pool) > 1:
-            pair = random.sample(mating_pool, 2)
-            self.mating_pair(pair)
-            for p in pair:
-                mating_pool.remove(p)
+            while len(mating_pool) > 1:
+                pair = random.sample(mating_pool, 2)
+                self.mating_pair(pair)
+                for p in pair:
+                    mating_pool.remove(p)
 
     def mutation(self, task):
         """Genome mutation."""
-        for k, gen in enumerate(self.genomes):
-            if gen.fitness < task.best_fitness:
-                if NEAT.probability(0.2):
-                    offspring = self.produce_offspring(gen)
-                    offspring.mutation()
-                    task.xor_fitness(offspring)
-                else:
-                    gen.mutation()
-                    task.xor_fitness(gen)
+        for k, sp in enumerate(self.species):
+            for gen in self.species[k]:
+                if gen.fitness < task.best_fitness:
+                    if NEAT.probability(0.15):
+                        offspring = self.produce_offspring(gen)
+                        offspring.mutation()
+                        task.xor_fitness(offspring)
+                    if NEAT.probability(0.9):
+                        gen.mutation(new_node=False)
+                        task.xor_fitness(gen)
 
-    def compatibility(self, gen1, gen2):
+    @staticmethod
+    def compatibility(gen1, gen2):
         """Calculating compatibility between two genomes."""
         g1_len = len(gen1.connections)
         g2_len = len(gen2.connections)
@@ -140,20 +150,34 @@ class Environment(object):
                 w2 += abs(gen1.connections[i].weight)
                 i += 1
         W = abs(w1 - w2)
-        distance = 0.6 * E + 0.8 * D + 0.1 * W
+        distance = 0.9 * E + 0.1 * D + 0.001 * W
         return distance
 
-    def speciation(self):
-        pass
+    def speciation(self, genome):
+        """Assign a genome to compatible species."""
+        for sp in self.species:
+            avg_comp = 0
+            for gen in sp[:self.avg_comp_num]:
+                avg_comp += self.compatibility(gen, genome)
+            avg_comp /= min(self.avg_comp_num, len(sp))
+            if avg_comp < self.comp_threshold:
+                sp.append(genome)
+                return
+        # If there is no compatible species, create a new species for the genome.
+        self.species.append([genome])
 
     def surviving_rule(self):
         """Set the surviving rules."""
-        self.genomes.sort(key=lambda NEAT: NEAT.fitness, reverse=True)
-        self.genomes = self.genomes[:40] + self.next_generation + [NEAT(i,
-                                                                        self.input_size,
-                                                                        self.output_size)
-                                                                   for i in range(10)]
-        self.population = len(self.genomes)
+        for k, sp in enumerate(self.species):
+
+            sp.sort(key=lambda NEAT: NEAT.fitness, reverse=True)
+            # sp = sp[:20] + self.next_generation + [NEAT(i,
+            #                                             self.input_size,
+            #                                             self.output_size)
+            #                                        for i in range(10)]
+            self.species[k] = self.species[k][:20]
+        for gen in self.next_generation:
+            self.speciation(gen)
 
     def run(self, task, showResult=False):
         """Run the environment."""
@@ -163,42 +187,49 @@ class Environment(object):
             self.next_generation = []
 
             # mating genomes
-            self.mating_genomes()
+            # self.mating_genomes()
 
             # mutation
             self.mutation(task)
 
-            # logging outcome information
-            outcomes = [gen for gen in self.genomes if gen.fitness == task.best_fitness]
-            genome_len = len(self.genomes)
-            avg_hid = 0.0
-            avg_con = 0.0
-            hidden_distribution = [0]
-            if genome_len > 0:
-                for gen in self.genomes:
-                    avg_hid += len(gen.hidden_nodes)
-                    avg_con += gen.connection_count()
-                    hid = len(gen.hidden_nodes)
-                    while hid >= len(hidden_distribution):
-                        hidden_distribution.append(0)
-                    hidden_distribution[hid] += 1
-                avg_hid /= genome_len
-                avg_con /= genome_len
-            print "Generation %d:\tpopulation = %d,\tAvg Hidden = %f,\tAvg Connection = %f,\toutcome = %d,\thidden node distribution:%s"%(
-                self.generation_iter + 1,
-                self.population,
-                avg_hid,
-                avg_con,
-                len(outcomes),
-                hidden_distribution)
-
             # killing bad genomes
             self.surviving_rule()
 
-        for gen in self.genomes:
-            if gen.fitness == task.best_fitness:
-                self.add_outcome(gen)
-                # self.genomes[k] = NEAT(gen.id, self.input_size, self.output_size)
+            # logging outcome information
+            outcome = [gen for sp in self.species for gen in sp if gen.fitness == task.best_fitness]
+            self.population = sum([len(sp) for sp in self.species])
+            hidden_distribution = [0]
+            for sp in self.species:
+                genome_len = len(sp)
+                if genome_len > 0:
+                    for gen in sp:
+                        hid = len(gen.hidden_nodes)
+                        while hid >= len(hidden_distribution):
+                            hidden_distribution.append(0)
+                        hidden_distribution[hid] += 1
+
+            print "Generation %d:\tpopulation = %d,\tspecies = %d,\toutcome = %d,\thidden node distribution:%s"%(
+                self.generation_iter + 1,
+                self.population,
+                len(self.species),
+                len(outcome),
+                hidden_distribution)
+
+        # collecting outcomes
+        for sp in self.species:
+            for gen in sp:
+                if gen.fitness == task.best_fitness:
+                    self.add_outcome(gen)
+
+        # print "Species distribution:"
+        # for k, sp in enumerate(self.species):
+        #     hidden_node = []
+        #     con = []
+        #     for gen in sp:
+        #         hidden_node.append(len(gen.hidden_nodes))
+        #         con.append(len(gen.connections))
+        #     print "\t%d:\tnode:\t%s\n\t\tcons:\t%s"%(k, hidden_node, con)
+
         if showResult:
             print "Completed Genomes:"
             self.outcomes.sort(key=lambda NEAT:NEAT.hidden_nodes)
@@ -212,24 +243,30 @@ class Environment(object):
                     avg_con += gen.connection_count()
                 avg_hid /= outcomes_len
                 avg_con /= outcomes_len
-            print "Population: %d,\tAverage Hidden node = %f,\tAverage Connection = %f"%(self.population, avg_hid, avg_con)
+            print "Evaluation: %d,\tPopulation: %d,\tAverage Hidden node = %f,\tAverage Connection = %f"%(
+                self.evaluation, self.population, avg_hid, avg_con)
 
-    @staticmethod
-    def test():
+    def test(self):
         neat = NEAT(0, 2, 1)
         neat.input_nodes[0].value = 1
         neat.input_nodes[1].value = 1
         neat.forward_propagation()
-        neat.show_structure()
+        # neat.show_structure()
 
         neat.add_hidden_node()
         neat.forward_propagation()
-        neat.show_structure()
+        # neat.show_structure()
 
+        neat.mutation()
+        neat.mutation()
         neat.mutation()
         neat.forward_propagation()
         neat.show_structure()
 
-        neat.mutation()
-        neat.forward_propagation()
-        neat.show_structure()
+        neat2 = NEAT(1, 2, 1)
+        neat2.input_nodes[0].value = 1
+        neat2.input_nodes[1].value = 1
+        neat2.forward_propagation()
+        neat2.show_structure()
+
+        print self.compatibility(neat, neat2)

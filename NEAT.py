@@ -68,6 +68,9 @@ class NEAT(object):
             for j in range(output_size):
                 self.add_connection(self.bias_node, self.output_nodes[j])
 
+    def __eq__(self, other):
+        return self.id == other.id
+
     def connection_count(self):
         """Counts the number of connections enabled in NEAT."""
         count = 0
@@ -164,9 +167,9 @@ class NEAT(object):
                 return True
         return False
 
-    def mutation(self):
+    def mutation(self, new_node=True):
         """Let the neural network randomly mutate."""
-        if self.probability(0.8):
+        if self.probability(0.99):
             # modify connection
             for con in self.connections:
                 if self.probability(0.9):
@@ -177,6 +180,7 @@ class NEAT(object):
                     con.random_weight()
 
         if self.probability(0.05):
+            # add a new connection
             for hid in self.hidden_nodes:
                 # consider bias node
                 if not self.does_connection_exist(self.bias_node, hid):
@@ -198,7 +202,7 @@ class NEAT(object):
                         self.add_connection(hid, node)
                         return
 
-        if self.probability(0.02):
+        if new_node and self.probability(0.02):
             # add a new node
             con = random.choice(self.connections)
             con.enable = False

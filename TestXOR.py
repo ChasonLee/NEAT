@@ -27,7 +27,8 @@ def main(args=None):
     env = Environment(input_size=XorTest.input_size,
                       output_size=XorTest.output_size,
                       init_population=args.pop,
-                      max_generation=args.gen)
+                      max_generation=args.gen,
+                      task=XorTest)
 
     # env.test()
     env.run(task=XorTest, showResult=True)
