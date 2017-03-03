@@ -24,7 +24,7 @@ class Environment(object):
         self.outcomes = []
         self.generation_iter = 0
         self.species = [[NEAT(i, input_size, output_size) for i in range(init_population)]]
-        self.comp_threshold = 1.0
+        self.comp_threshold = 1.5
         self.avg_comp_num = 50
         self.evaluation = init_population
         for sp in self.species:
@@ -96,7 +96,7 @@ class Environment(object):
         for sp in self.species:
             for gen in sp:
                 # The higher the fitness, the higher the probability of mating.
-                if NEAT.probability(0.09 * (gen.fitness ** 2)):
+                if NEAT.probability(0.5):
                     mating_pool.append(gen)
 
             while len(mating_pool) > 1:
@@ -114,7 +114,7 @@ class Environment(object):
                         offspring = self.produce_offspring(gen)
                         offspring.mutation()
                         task.xor_fitness(offspring)
-                    if NEAT.probability(0.9):
+                    if NEAT.probability(0.99):
                         gen.mutation(new_node=False)
                         task.xor_fitness(gen)
 
@@ -175,7 +175,7 @@ class Environment(object):
             #                                             self.input_size,
             #                                             self.output_size)
             #                                        for i in range(10)]
-            self.species[k] = self.species[k][:20]
+            self.species[k] = self.species[k][:10]
         for gen in self.next_generation:
             self.speciation(gen)
 
@@ -186,11 +186,11 @@ class Environment(object):
         for self.generation_iter in range(self.max_generation):
             self.next_generation = []
 
-            # mating genomes
-            # self.mating_genomes()
-
             # mutation
             self.mutation(task)
+
+            # mating genomes
+            self.mating_genomes()
 
             # killing bad genomes
             self.surviving_rule()
@@ -221,14 +221,14 @@ class Environment(object):
                 if gen.fitness == task.best_fitness:
                     self.add_outcome(gen)
 
-        # print "Species distribution:"
-        # for k, sp in enumerate(self.species):
-        #     hidden_node = []
-        #     con = []
-        #     for gen in sp:
-        #         hidden_node.append(len(gen.hidden_nodes))
-        #         con.append(len(gen.connections))
-        #     print "\t%d:\tnode:\t%s\n\t\tcons:\t%s"%(k, hidden_node, con)
+        print "Species distribution:"
+        for k, sp in enumerate(self.species):
+            hidden_node = []
+            con = []
+            for gen in sp:
+                hidden_node.append(len(gen.hidden_nodes))
+                con.append(len(gen.connections))
+            print "\t%d:\tnode:\t%s\n\t\tcons:\t%s"%(k, hidden_node, con)
 
         if showResult:
             print "Completed Genomes:"
