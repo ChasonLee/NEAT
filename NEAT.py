@@ -174,7 +174,7 @@ class NEAT(object):
             for con in self.connections:
                 if self.probability(0.9):
                     # uniformly perturb
-                    con.weight += random.uniform(-1, 1)
+                    con.weight += random.uniform(-3, 3)
                 else:
                     # assign a new random weight
                     con.random_weight()

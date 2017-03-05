@@ -96,7 +96,7 @@ class Environment(object):
         for sp in self.species:
             for gen in sp:
                 # The higher the fitness, the higher the probability of mating.
-                if NEAT.probability(0.5):
+                if NEAT.probability(0.8):
                     mating_pool.append(gen)
 
             while len(mating_pool) > 1:
@@ -110,7 +110,7 @@ class Environment(object):
         for k, sp in enumerate(self.species):
             for gen in self.species[k]:
                 if gen.fitness < task.best_fitness:
-                    if NEAT.probability(0.15):
+                    if NEAT.probability(0.2):
                         offspring = self.produce_offspring(gen)
                         offspring.mutation()
                         task.xor_fitness(offspring)
@@ -168,16 +168,17 @@ class Environment(object):
 
     def surviving_rule(self):
         """Set the surviving rules."""
-        for k, sp in enumerate(self.species):
 
+        for gen in self.next_generation:
+            self.speciation(gen)
+
+        for k, sp in enumerate(self.species):
             sp.sort(key=lambda NEAT: NEAT.fitness, reverse=True)
             # sp = sp[:20] + self.next_generation + [NEAT(i,
             #                                             self.input_size,
             #                                             self.output_size)
             #                                        for i in range(10)]
-            self.species[k] = self.species[k][:10]
-        for gen in self.next_generation:
-            self.speciation(gen)
+            self.species[k] = self.species[k][:15]
 
     def run(self, task, showResult=False):
         """Run the environment."""
