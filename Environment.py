@@ -10,23 +10,31 @@ class Environment(object):
     Attributes:
         input_size: The input size of the genomes.
         output_size: The output size of the genomes.
-        population_size: The population of genomes in the environment.
+        init_population: The initial population of genomes in the environment.
         max_generation: The maximum number of genomes generations
         genomes: The list of NEAT(NeuroEvolution of Augmenting Topologies)
     """
-    def __init__(self,input_size, output_size, init_population, max_generation, task):
+    def __init__(self,input_size, output_size, init_population, max_generation, comp_threshold, avg_comp_num,
+                 mating_prob, copy_mutate_pro, self_mutate_pro,excess, disjoint, weight, survive, task):
         self.input_size = input_size
         self.output_size = output_size
         self.population = init_population
+        self.evaluation = init_population
         self.max_generation = max_generation
-        # self.genomes = [NEAT(i, input_size, output_size) for i in range(init_population)]
         self.next_generation = []
         self.outcomes = []
         self.generation_iter = 0
         self.species = [[NEAT(i, input_size, output_size) for i in range(init_population)]]
-        self.comp_threshold = 1.5
-        self.avg_comp_num = 50
-        self.evaluation = init_population
+        self.comp_threshold = comp_threshold
+        self.avg_comp_num = avg_comp_num
+        self.mating_prob = mating_prob
+        self.copy_mutate_pro = copy_mutate_pro
+        self.self_mutate_pro = self_mutate_pro
+        self.excess = excess
+        self.disjoint = disjoint
+        self.weight = weight
+        self.survive = survive
+
         for sp in self.species:
             for gen in sp:
                 task.xor_fitness(gen)
@@ -96,7 +104,7 @@ class Environment(object):
         for sp in self.species:
             for gen in sp:
                 # The higher the fitness, the higher the probability of mating.
-                if NEAT.probability(0.8):
+                if NEAT.probability(self.mating_prob):
                     mating_pool.append(gen)
 
             while len(mating_pool) > 1:
@@ -110,16 +118,15 @@ class Environment(object):
         for k, sp in enumerate(self.species):
             for gen in self.species[k]:
                 if gen.fitness < task.best_fitness:
-                    if NEAT.probability(0.2):
+                    if NEAT.probability(self.copy_mutate_pro):
                         offspring = self.produce_offspring(gen)
                         offspring.mutation()
                         task.xor_fitness(offspring)
-                    if NEAT.probability(0.99):
+                    if NEAT.probability(self.self_mutate_pro):
                         gen.mutation(new_node=False)
                         task.xor_fitness(gen)
 
-    @staticmethod
-    def compatibility(gen1, gen2):
+    def compatibility(self, gen1, gen2):
         """Calculating compatibility between two genomes."""
         g1_len = len(gen1.connections)
         g2_len = len(gen2.connections)
@@ -150,7 +157,7 @@ class Environment(object):
                 w2 += abs(gen1.connections[i].weight)
                 i += 1
         W = abs(w1 - w2)
-        distance = 0.9 * E + 0.1 * D + 0.001 * W
+        distance = self.excess * E + self.disjoint * D + self.weight * W
         return distance
 
     def speciation(self, genome):
@@ -178,7 +185,7 @@ class Environment(object):
             #                                             self.input_size,
             #                                             self.output_size)
             #                                        for i in range(10)]
-            self.species[k] = self.species[k][:15]
+            self.species[k] = self.species[k][:self.survive]
 
     def run(self, task, showResult=False):
         """Run the environment."""
