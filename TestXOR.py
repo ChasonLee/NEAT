@@ -10,7 +10,7 @@ class XorTest(object):
     input_size = 2
     output_size = 1
     @staticmethod
-    def xor_fitness(genome):
+    def get_fitness(genome):
         fitness = 0
         for case in [[[0, 0], [0]], [[0, 1], [1]], [[1, 0], [1]], [[1, 1], [0]]]:
             for i in range(len(genome.input_nodes)):

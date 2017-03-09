@@ -37,7 +37,7 @@ class Environment(object):
 
         for sp in self.species:
             for gen in sp:
-                task.xor_fitness(gen)
+                task.get_fitness(gen)
 
     def produce_offspring(self, genome):
         """Produce a new offspring."""
@@ -117,14 +117,14 @@ class Environment(object):
         """Genome mutation."""
         for k, sp in enumerate(self.species):
             for gen in self.species[k]:
-                if gen.fitness < task.best_fitness:
+                if gen.fitness < task.get_fitness:
                     if NEAT.probability(self.copy_mutate_pro):
                         offspring = self.produce_offspring(gen)
                         offspring.mutation()
-                        task.xor_fitness(offspring)
+                        task.get_fitness(offspring)
                     if NEAT.probability(self.self_mutate_pro):
                         gen.mutation(new_node=False)
-                        task.xor_fitness(gen)
+                        task.get_fitness(gen)
 
     def compatibility(self, gen1, gen2):
         """Calculating compatibility between two genomes."""
@@ -204,7 +204,7 @@ class Environment(object):
             self.surviving_rule()
 
             # logging outcome information
-            outcome = [gen for sp in self.species for gen in sp if gen.fitness == task.best_fitness]
+            outcome = [gen for sp in self.species for gen in sp if gen.fitness == task.get_fitness]
             self.population = sum([len(sp) for sp in self.species])
             hidden_distribution = [0]
             for sp in self.species:
@@ -226,7 +226,7 @@ class Environment(object):
         # collecting outcomes
         for sp in self.species:
             for gen in sp:
-                if gen.fitness == task.best_fitness:
+                if gen.fitness == task.get_fitness:
                     self.add_outcome(gen)
 
         print "Species distribution:"
