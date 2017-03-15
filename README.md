@@ -29,5 +29,8 @@ optional arguments:
   --wgh WGH   The average weight differences weight.
   --srv SRV   The number of survivors per generation.
 ```
+
+- Playing Tictactoe game: ```python TestTictactoe.py```
+
 ## Paper Link
 [Evolving Neural Networks through Augmenting Topologies](http://nn.cs.utexas.edu/downloads/papers/stanley.ec02.pdf)
