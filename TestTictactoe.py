@@ -6,8 +6,8 @@ import sys
 import argparse
 
 class TictactoeTest:
-    play_times = 10
-    best_fitness = 2 * play_times
+    play_times = 3
+    best_fitness = play_times * 1
 
     ROW = 3
     COL = 3
@@ -16,6 +16,10 @@ class TictactoeTest:
     PLAYER1 = 1
     PLAYER2 = 2
     DRAW = 3
+
+    PLAYER1_CHAR = '#'
+    PLAYER2_CHAR = '*'
+    MAPS = '.'
 
     input_size = ROW * COL * 3
     output_size = ROW * COL
@@ -27,6 +31,21 @@ class TictactoeTest:
         self.board = [[0 for c in range(self.COL)] for r in range(self.ROW)]
         self.empty = [[r, c] for r in range(self.ROW) for c in range(self.COL)]
 
+    def print_piece(self, inx):
+        if inx == self.PLAYER1:
+            print self.PLAYER1_CHAR,
+        elif inx == self.PLAYER2:
+            print self.PLAYER2_CHAR,
+        else:
+            print self.MAPS,
+
+    def show_board(self):
+        for r in self.board:
+            for c in r:
+                self.print_piece(c)
+            print
+        print
+
     def is_occupied(self, r, c):
         return self.board[r][c] != 0
 
@@ -34,8 +53,8 @@ class TictactoeTest:
         if not self.is_occupied(r, c):
             self.empty.remove([r, c])
             self.board[r][c] = player
-            return player
-        return None
+            return True
+        return False
 
     def rnd_move(self, player):
         if len(self.empty) > 0:
@@ -61,26 +80,41 @@ class TictactoeTest:
                         break
             if count >= self.WIN_NUM:
                 return player
-        if self.turns >= self.ROW * self.COL:
+        if self.turns + 1 >= self.ROW * self.COL:
             return self.DRAW
         return None
 
     def get_fitness(self, genome):
         fitness = 0
-        for i in range(self.play_times):
-            self.init_board()
-            for self.turns in range(self.ROW * self.COL):
-                if self.turns % 2 == 0 :
-                    r, c = self.rnd_move(self.PLAYER1)
-                else:
-                    r, c = self.rnd_move(self.PLAYER2)
-                res = self.judge(r, c)
-                if res != None and res != self.DRAW:
-                    print "Player %d wins."%res
-                    break
-                elif res == self.DRAW:
-                    print "There is a draw."
-                    break
+        for k in range(2):
+            for i in range(self.play_times):
+                self.init_board()
+                for self.turns in range(self.ROW * self.COL):
+                    if self.turns % 2 == k :
+                        for m in range(self.ROW):
+                            for n in range(self.COL):
+                                genome.input_nodes[m*self.COL+n].value = self.board[m][n]
+                        genome.forward_propagation()
+                        output = genome.get_max_output_index()
+                        r, c = int(output / self.COL), output % self.COL
+                        if not self.move(self.PLAYER1, r, c):
+                            # print "AI randomly move:"
+                            # r, c = self.rnd_move(self.PLAYER1)
+                            break
+                    else:
+                        r, c = self.rnd_move(self.PLAYER2)
+                    # self.show_board()
+                    res = self.judge(r, c)
+                    if res != None and res != self.DRAW:
+                        # print "Player %d wins."%res
+                        if res == self.PLAYER1:
+                            fitness += 1
+                        break
+                    elif res == self.DRAW:
+                        # print "There is a draw."
+                        fitness += 0.2
+                        break
+        genome.fitness = fitness
         return fitness
 
 def main(args=None):
@@ -106,13 +140,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Change the evolutionary parameters.')
     parser.add_argument(
         '--pop',
-        default=150,
+        default=10,
         type=int,
         help='The initial population size.'
     )
     parser.add_argument(
         '--gen',
-        default=100,
+        default=50,
         type=int,
         help='The maximum generations.'
     )
@@ -136,13 +170,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '--cpy',
-        default=0.1,
+        default=0.2,
         type=float,
         help='The copy mutation probability.'
     )
     parser.add_argument(
         '--slf',
-        default=0.99,
+        default=0.6,
         type=float,
         help='The self mutation probability.'
     )

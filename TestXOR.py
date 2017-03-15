@@ -16,9 +16,8 @@ class XorTest(object):
             for i in range(len(genome.input_nodes)):
                 genome.input_nodes[i].value = case[0][i]
             genome.forward_propagation()
-            for i in range(len(genome.output_nodes)):
-                if round(genome.output_nodes[i].value) != case[1][i]:
-                    break
+            if round(genome.output_nodes[0].value) != case[1][0]:
+                break
             else:
                 fitness += 1
         genome.fitness = fitness

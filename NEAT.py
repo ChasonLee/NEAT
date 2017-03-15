@@ -106,6 +106,15 @@ class NEAT(object):
         for out in self.output_nodes:
             out.value = self.update_node(out.id)
 
+    def get_max_output_index(self):
+        res = 0
+        max_value = 0
+        for inx, output in enumerate(self.output_nodes):
+            if output.value > max_value:
+                max_value = output.value
+                res = inx
+        return res
+
     @staticmethod
     def get_innovation(connection):
         """Get innovation number and ensure that the same connection structure has the same innovation number."""

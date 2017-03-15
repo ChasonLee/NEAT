@@ -117,7 +117,7 @@ class Environment(object):
         """Genome mutation."""
         for k, sp in enumerate(self.species):
             for gen in self.species[k]:
-                if gen.fitness < task.get_fitness:
+                if gen.fitness < task.best_fitness:
                     if NEAT.probability(self.copy_mutate_pro):
                         offspring = self.produce_offspring(gen)
                         offspring.mutation()
@@ -204,7 +204,7 @@ class Environment(object):
             self.surviving_rule()
 
             # logging outcome information
-            outcome = [gen for sp in self.species for gen in sp if gen.fitness == task.get_fitness]
+            outcome = [gen for sp in self.species for gen in sp if gen.fitness >= task.best_fitness]
             self.population = sum([len(sp) for sp in self.species])
             hidden_distribution = [0]
             for sp in self.species:
@@ -226,7 +226,7 @@ class Environment(object):
         # collecting outcomes
         for sp in self.species:
             for gen in sp:
-                if gen.fitness == task.get_fitness:
+                if gen.fitness >= task.best_fitness:
                     self.add_outcome(gen)
 
         print "Species distribution:"
@@ -237,11 +237,16 @@ class Environment(object):
                 hidden_node.append(len(gen.hidden_nodes))
                 con.append(len(gen.connections))
             print "\t%d:\tnode:\t%s\n\t\tcons:\t%s"%(k, hidden_node, con)
+        print
 
         if showResult:
-            print "Completed Genomes:"
+            print "Completed Genomes:",
             self.outcomes.sort(key=lambda NEAT:NEAT.hidden_nodes)
             outcomes_len = len(self.outcomes)
+            if outcomes_len > 0:
+                print outcomes_len
+            else:
+                print "There are no completed genomes!"
             avg_hid = 0.0
             avg_con = 0.0
             if outcomes_len > 0:
