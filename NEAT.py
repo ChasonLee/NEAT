@@ -80,7 +80,7 @@ class NEAT(object):
         return count
 
     def show_structure(self):
-        print "Genome %d(fitness = %d):"%(self.id, self.fitness)
+        print "Genome %d(fitness = %.2f):"%(self.id, self.fitness)
         print "\tTotal Nodes:%d\tHidden Nodes:%d"%(self.node_count, len(self.hidden_nodes))
         print "\tEnabled Connections(%d):"%self.connection_count()
         for con in self.connections:

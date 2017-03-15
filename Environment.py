@@ -4,6 +4,7 @@ __author__ = 'Chason'
 from NEAT import NEAT
 import random
 import copy
+import pickle
 
 class Environment(object):
     """This is an ecological environment that can control the propagation of evolutionary neural networks.
@@ -15,7 +16,7 @@ class Environment(object):
         genomes: The list of NEAT(NeuroEvolution of Augmenting Topologies)
     """
     def __init__(self,input_size, output_size, init_population, max_generation, comp_threshold, avg_comp_num,
-                 mating_prob, copy_mutate_pro, self_mutate_pro,excess, disjoint, weight, survive, task):
+                 mating_prob, copy_mutate_pro, self_mutate_pro,excess, disjoint, weight, survive, task, model_name="tmp.model"):
         self.input_size = input_size
         self.output_size = output_size
         self.population = init_population
@@ -34,6 +35,7 @@ class Environment(object):
         self.disjoint = disjoint
         self.weight = weight
         self.survive = survive
+        self.model_name = model_name
 
         for sp in self.species:
             for gen in sp:
@@ -124,7 +126,7 @@ class Environment(object):
                         task.get_fitness(offspring)
                     if NEAT.probability(self.self_mutate_pro):
                         gen.mutation(new_node=False)
-                        task.get_fitness(gen)
+                    task.get_fitness(gen)
 
     def compatibility(self, gen1, gen2):
         """Calculating compatibility between two genomes."""
@@ -207,6 +209,8 @@ class Environment(object):
             outcome = [gen for sp in self.species for gen in sp if gen.fitness >= task.best_fitness]
             self.population = sum([len(sp) for sp in self.species])
             hidden_distribution = [0]
+            max_fitness = 0
+            best_outcome = None
             for sp in self.species:
                 genome_len = len(sp)
                 if genome_len > 0:
@@ -215,19 +219,38 @@ class Environment(object):
                         while hid >= len(hidden_distribution):
                             hidden_distribution.append(0)
                         hidden_distribution[hid] += 1
+                        if gen.fitness > max_fitness:
+                            max_fitness = gen.fitness
+                            best_outcome = gen
 
-            print "Generation %d:\tpopulation = %d,\tspecies = %d,\toutcome = %d,\thidden node distribution:%s"%(
+            print "Generation %d:\tpopulation = %d,\tspecies = %d,\toutcome = %d,\tmax_fitness = %.2f\thidden node distribution:%s"%(
                 self.generation_iter + 1,
                 self.population,
                 len(self.species),
                 len(outcome),
+                max_fitness,
                 hidden_distribution)
 
+            # Save model
+            with open(self.model_name, 'wb') as file_out:
+                pickle.dump(best_outcome, file_out)
+
         # collecting outcomes
+        max_fitness = 0
+        best_outcome = None
         for sp in self.species:
             for gen in sp:
                 if gen.fitness >= task.best_fitness:
                     self.add_outcome(gen)
+                if gen.fitness > max_fitness:
+                    max_fitness = gen.fitness
+                    best_outcome = gen
+        if len(self.outcomes) == 0:
+            self.add_outcome(best_outcome)
+
+        # Save best model
+        with open(self.model_name, 'wb') as file_out:
+            pickle.dump(best_outcome, file_out)
 
         print "Species distribution:"
         for k, sp in enumerate(self.species):
@@ -251,7 +274,7 @@ class Environment(object):
             avg_con = 0.0
             if outcomes_len > 0:
                 for gen in self.outcomes:
-                    gen.show_structure()
+                    # gen.show_structure()
                     avg_hid += len(gen.hidden_nodes)
                     avg_con += gen.connection_count()
                 avg_hid /= outcomes_len
@@ -259,27 +282,30 @@ class Environment(object):
             print "Evaluation: %d,\tPopulation: %d,\tAverage Hidden node = %f,\tAverage Connection = %f"%(
                 self.evaluation, self.population, avg_hid, avg_con)
 
-    def test(self):
-        neat = NEAT(0, 2, 1)
-        neat.input_nodes[0].value = 1
-        neat.input_nodes[1].value = 1
-        neat.forward_propagation()
+    def test(self, task=None):
+        # neat = NEAT(0, 2, 1)
+        # neat.input_nodes[0].value = 1
+        # neat.input_nodes[1].value = 1
+        # neat.forward_propagation()
+        # # neat.show_structure()
+        #
+        # neat.add_hidden_node()
+        # neat.forward_propagation()
+        # # neat.show_structure()
+        #
+        # neat.mutation()
+        # neat.mutation()
+        # neat.mutation()
+        # neat.forward_propagation()
         # neat.show_structure()
-
-        neat.add_hidden_node()
-        neat.forward_propagation()
-        # neat.show_structure()
-
-        neat.mutation()
-        neat.mutation()
-        neat.mutation()
-        neat.forward_propagation()
-        neat.show_structure()
-
-        neat2 = NEAT(1, 2, 1)
-        neat2.input_nodes[0].value = 1
-        neat2.input_nodes[1].value = 1
-        neat2.forward_propagation()
-        neat2.show_structure()
-
-        print self.compatibility(neat, neat2)
+        #
+        # neat2 = NEAT(1, 2, 1)
+        # neat2.input_nodes[0].value = 1
+        # neat2.input_nodes[1].value = 1
+        # neat2.forward_propagation()
+        # neat2.show_structure()
+        #
+        # print self.compatibility(neat, neat2)
+        with open(self.model_name, "rb") as file_in:
+            model = pickle.load(file_in)
+        task.test_case(model)

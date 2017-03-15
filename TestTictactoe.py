@@ -6,7 +6,7 @@ import sys
 import argparse
 
 class TictactoeTest:
-    play_times = 3
+    play_times = 10
     best_fitness = play_times * 1
 
     ROW = 3
@@ -40,6 +40,7 @@ class TictactoeTest:
             print self.MAPS,
 
     def show_board(self):
+        print "----------------------------------"
         for r in self.board:
             for c in r:
                 self.print_piece(c)
@@ -84,6 +85,49 @@ class TictactoeTest:
             return self.DRAW
         return None
 
+    def test_case(self, genome):
+        print "Test case:"
+        genome.show_structure()
+        wins = 0
+        loses = 0
+        draw = 0
+        fitness = 0
+        for k in range(2):
+            for i in range(self.play_times):
+                self.init_board()
+                for self.turns in range(self.ROW * self.COL):
+                    if self.turns % 2 == k:
+                        for m in range(self.ROW):
+                            for n in range(self.COL):
+                                genome.input_nodes[m * self.COL + n].value = self.board[m][n]
+                        genome.forward_propagation()
+                        output = genome.get_max_output_index()
+                        r, c = int(output / self.COL), output % self.COL
+                        if not self.move(self.PLAYER1, r, c):
+                            fitness -= 0
+                            print "(%d, %d) has been occupied."%(r, c)
+                            loses += 1
+                            break
+                    else:
+                        r, c = self.rnd_move(self.PLAYER2)
+                    self.show_board()
+                    res = self.judge(r, c)
+                    if res != None and res != self.DRAW:
+                        print "Player %d wins."%res
+                        if res == self.PLAYER1:
+                            fitness += 1
+                            wins += 1
+                        else:
+                            fitness -= 0
+                            loses += 1
+                        break
+                    elif res == self.DRAW:
+                        print "There is a draw."
+                        fitness += 0.2
+                        draw += 1
+                        break
+        print "Wins: %d, Loses: %d, Draw: %d, Fitness = %.2f"%(wins, loses, draw, fitness)
+
     def get_fitness(self, genome):
         fitness = 0
         for k in range(2):
@@ -100,6 +144,7 @@ class TictactoeTest:
                         if not self.move(self.PLAYER1, r, c):
                             # print "AI randomly move:"
                             # r, c = self.rnd_move(self.PLAYER1)
+                            fitness -= 0
                             break
                     else:
                         r, c = self.rnd_move(self.PLAYER2)
@@ -109,6 +154,8 @@ class TictactoeTest:
                         # print "Player %d wins."%res
                         if res == self.PLAYER1:
                             fitness += 1
+                        else:
+                            fitness -= 0
                         break
                     elif res == self.DRAW:
                         # print "There is a draw."
@@ -133,20 +180,22 @@ def main(args=None):
                       survive=args.srv,
                       task=TictactoeTest())
 
-    # env.test()
+    # env.test(TictactoeTest())
     env.run(task=TictactoeTest(), showResult=True)
+    TictactoeTest().test_case(env.outcomes[0])
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Change the evolutionary parameters.')
     parser.add_argument(
         '--pop',
-        default=10,
+        default=20,
         type=int,
         help='The initial population size.'
     )
     parser.add_argument(
         '--gen',
-        default=50,
+        default=1000,
         type=int,
         help='The maximum generations.'
     )
@@ -164,19 +213,19 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '--mat',
-        default=0.6,
+        default=0.5,
         type=float,
         help='The mating probability.'
     )
     parser.add_argument(
         '--cpy',
-        default=0.2,
+        default=0.3,
         type=float,
         help='The copy mutation probability.'
     )
     parser.add_argument(
         '--slf',
-        default=0.6,
+        default=0.0,
         type=float,
         help='The self mutation probability.'
     )
@@ -200,7 +249,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '--srv',
-        default=15,
+        default=10,
         type=int,
         help='The number of survivors per generation.'
     )
