@@ -7,7 +7,7 @@ import argparse
 
 class TictactoeTest:
     play_times = 10
-    best_fitness = play_times * 1
+    best_fitness = play_times * 2
 
     ROW = 3
     COL = 3
@@ -195,13 +195,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '--gen',
-        default=1000,
+        default=10000,
         type=int,
         help='The maximum generations.'
     )
     parser.add_argument(
         '--thr',
-        default=1.5,
+        default=2.5,
         type=float,
         help='The compatibility threshold.'
     )

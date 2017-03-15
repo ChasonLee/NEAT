@@ -211,7 +211,7 @@ class NEAT(object):
                         self.add_connection(hid, node)
                         return
 
-        if new_node and self.probability(0.02):
+        if new_node and self.probability(0.06):
             # add a new node
             con = random.choice(self.connections)
             con.enable = False
