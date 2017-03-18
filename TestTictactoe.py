@@ -144,7 +144,7 @@ class TictactoeTest:
                         if not self.move(self.PLAYER1, r, c):
                             # print "AI randomly move:"
                             # r, c = self.rnd_move(self.PLAYER1)
-                            fitness -= 0
+                            fitness -= 0.1
                             break
                     else:
                         r, c = self.rnd_move(self.PLAYER2)

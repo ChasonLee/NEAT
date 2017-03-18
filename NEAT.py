@@ -179,7 +179,7 @@ class NEAT(object):
     def mutation(self, new_node=True):
         """Let the neural network randomly mutate."""
         if self.probability(0.99):
-            # modify connection
+            # modify connection weight
             for con in self.connections:
                 if self.probability(0.9):
                     # uniformly perturb
@@ -192,26 +192,30 @@ class NEAT(object):
             # add a new connection
             for hid in self.hidden_nodes:
                 # consider bias node
-                if not self.does_connection_exist(self.bias_node, hid):
-                    self.add_connection(self.bias_node, hid)
-                    break
+                if self.probability(0.5):
+                    if not self.does_connection_exist(self.bias_node, hid):
+                        self.add_connection(self.bias_node, hid)
+                        break
                 # search input nodes
-                for node in self.input_nodes:
-                    if not self.does_connection_exist(node, hid):
-                        self.add_connection(node, hid)
-                        return
+                if self.probability(0.5):
+                    for node in self.input_nodes:
+                        if not self.does_connection_exist(node, hid):
+                            self.add_connection(node, hid)
+                            return
                 # search hidden nodes
-                for hid2 in self.hidden_nodes:
-                    if hid.id != hid2.id and not self.does_connection_exist(hid, hid2):
-                        self.add_connection(hid, hid2)
-                        return
+                if self.probability(0.5):
+                    for hid2 in self.hidden_nodes:
+                        if hid.id != hid2.id and not self.does_connection_exist(hid, hid2):
+                            self.add_connection(hid, hid2)
+                            return
                 # search output nodes
-                for node in self.output_nodes:
-                    if not self.does_connection_exist(hid, node):
-                        self.add_connection(hid, node)
-                        return
+                if self.probability(0.5):
+                    for node in self.output_nodes:
+                        if not self.does_connection_exist(hid, node):
+                            self.add_connection(hid, node)
+                            return
 
-        if new_node and self.probability(0.06):
+        if new_node and self.probability(0.03):
             # add a new node
             con = random.choice(self.connections)
             con.enable = False
