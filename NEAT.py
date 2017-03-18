@@ -78,6 +78,9 @@ class NEAT(object):
             if con.enable:
                 count += 1
         return count
+    def show_info(self):
+        print "\tGenome %d(fitness = %.2f):Total Nodes:%d\tHidden Nodes:%d\tEnabled Connections:%d" % (
+            self.id, self.fitness, self.node_count, len(self.hidden_nodes), self.connection_count())
 
     def show_structure(self):
         print "Genome %d(fitness = %.2f):"%(self.id, self.fitness)
@@ -215,7 +218,7 @@ class NEAT(object):
                             self.add_connection(hid, node)
                             return
 
-        if new_node and self.probability(0.03):
+        if new_node and self.probability(0.02):
             # add a new node
             con = random.choice(self.connections)
             con.enable = False

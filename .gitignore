@@ -50,4 +50,5 @@ Temporary Items
 .idea/
 
 # Temp Files
-*.model
+*.env
+*.gen

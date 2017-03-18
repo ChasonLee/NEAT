@@ -5,6 +5,7 @@ from NEAT import NEAT
 import random
 import copy
 import pickle
+import os
 
 class Environment(object):
     """This is an ecological environment that can control the propagation of evolutionary neural networks.
@@ -16,7 +17,8 @@ class Environment(object):
         genomes: The list of NEAT(NeuroEvolution of Augmenting Topologies)
     """
     def __init__(self,input_size, output_size, init_population, max_generation, comp_threshold, avg_comp_num,
-                 mating_prob, copy_mutate_pro, self_mutate_pro,excess, disjoint, weight, survive, task, model_name="tmp.model"):
+                 mating_prob, copy_mutate_pro, self_mutate_pro,excess, disjoint, weight, survive, task,
+                 genome_name="test.gen", environment_name="test.env"):
         self.input_size = input_size
         self.output_size = output_size
         self.population = init_population
@@ -35,11 +37,26 @@ class Environment(object):
         self.disjoint = disjoint
         self.weight = weight
         self.survive = survive
-        self.model_name = model_name
+        self.genome_name = genome_name
+        self.environment_name = environment_name
+
+        # Load the environment parameters, if you saved it before.
+        if os.path.exists(self.environment_name):
+            self.load()
 
         for sp in self.species:
             for gen in sp:
                 task.get_fitness(gen)
+
+    def save(self):
+        print "Saving...",
+        with open(self.environment_name, "wb") as f:
+            pickle.dump([ self.generation_iter, self.species, self.next_generation, self.outcomes], f)
+        print "\tDone!"
+
+    def load(self):
+        with open(self.environment_name, "rb") as f:
+            self.generation_iter, self.species, self.next_generation, self.outcomes = pickle.load(f)
 
     def produce_offspring(self, genome):
         """Produce a new offspring."""
@@ -173,7 +190,8 @@ class Environment(object):
                 sp.append(genome)
                 return
         # If there is no compatible species, create a new species for the genome.
-        self.species.append([genome])
+        if len(self.species) <= 100:
+            self.species.append([genome])
 
     def surviving_rule(self):
         """Set the surviving rules."""
@@ -192,20 +210,20 @@ class Environment(object):
     def run(self, task, showResult=False):
         """Run the environment."""
         print "Running Environment...(Initial population = %d, Maximum generation = %d)"%(self.population, self.max_generation)
-        # generational change
-        for self.generation_iter in range(self.max_generation):
+        # Generational change
+        for self.generation_iter in range(self.generation_iter + 1, self.max_generation):
             self.next_generation = []
 
-            # mutation
+            # Mutation
             self.mutation(task)
 
-            # mating genomes
+            # Mating genomes
             self.mating_genomes()
 
-            # killing bad genomes
+            # Killing bad genomes
             self.surviving_rule()
 
-            # logging outcome information
+            # Logging outcome information
             outcome = [gen for sp in self.species for gen in sp if gen.fitness >= task.best_fitness]
             self.population = sum([len(sp) for sp in self.species])
             hidden_distribution = [0]
@@ -223,19 +241,22 @@ class Environment(object):
                             max_fitness = gen.fitness
                             best_outcome = gen
 
-            print "Generation %d:\tpopulation = %d,\tspecies = %d,\toutcome = %d,\tmax_fitness = %.2f\thidden node distribution:%s"%(
-                self.generation_iter + 1,
+            print "Generation %d:\tpopulation = %d,\tspecies = %d,\toutcome = %d,\tmax_fitness = %.2f,\thidden node distribution:%s"%(
+                self.generation_iter,
                 self.population,
                 len(self.species),
                 len(outcome),
                 max_fitness,
                 hidden_distribution)
 
-            # Save model
-            with open(self.model_name, 'wb') as file_out:
+            # Save genome
+            with open(self.genome_name, 'wb') as file_out:
                 pickle.dump(best_outcome, file_out)
 
-        # collecting outcomes
+            # Save environment parameters
+            self.save()
+
+        # Collecting outcomes
         max_fitness = 0
         best_outcome = None
         for sp in self.species:
@@ -248,8 +269,8 @@ class Environment(object):
         if len(self.outcomes) == 0:
             self.add_outcome(best_outcome)
 
-        # Save best model
-        with open(self.model_name, 'wb') as file_out:
+        # Save best genome
+        with open(self.genome_name, 'wb') as file_out:
             pickle.dump(best_outcome, file_out)
 
         print "Species distribution:"
@@ -306,6 +327,6 @@ class Environment(object):
         # neat2.show_structure()
         #
         # print self.compatibility(neat, neat2)
-        with open(self.model_name, "rb") as file_in:
+        with open(self.genome_name, "rb") as file_in:
             model = pickle.load(file_in)
         task.test_case(model)
