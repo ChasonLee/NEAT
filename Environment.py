@@ -6,6 +6,7 @@ import random
 import copy
 import pickle
 import os
+import sys
 
 class Environment(object):
     """This is an ecological environment that can control the propagation of evolutionary neural networks.
@@ -75,7 +76,7 @@ class Environment(object):
         #                                                                                len(gen.hidden_nodes),
         #                                                                                gen.connection_count())
 
-    def mating_pair(self, pair):
+    def mating_pair(self, pair, task):
         """Mating two genomes."""
         p1 = pair[0]
         p2 = pair[1]
@@ -115,9 +116,10 @@ class Environment(object):
                                         output_node_id=con.output.id,
                                         weight=con.weight,
                                         enable=con.enable)
+        task.get_fitness(offspring)
         return offspring
 
-    def mating_genomes(self):
+    def mating_genomes(self, task):
         """Randomly mating two genomes."""
         mating_pool = []
         for sp in self.species:
@@ -128,7 +130,7 @@ class Environment(object):
 
             while len(mating_pool) > 1:
                 pair = random.sample(mating_pool, 2)
-                self.mating_pair(pair)
+                self.mating_pair(pair, task)
                 for p in pair:
                     mating_pool.remove(p)
 
@@ -190,7 +192,7 @@ class Environment(object):
                 sp.append(genome)
                 return
         # If there is no compatible species, create a new species for the genome.
-        if len(self.species) <= 100:
+        if len(self.species) <= 50:
             self.species.append([genome])
 
     def surviving_rule(self):
@@ -218,7 +220,7 @@ class Environment(object):
             self.mutation(task)
 
             # Mating genomes
-            self.mating_genomes()
+            self.mating_genomes(task)
 
             # Killing bad genomes
             self.surviving_rule()
@@ -227,7 +229,7 @@ class Environment(object):
             outcome = [gen for sp in self.species for gen in sp if gen.fitness >= task.best_fitness]
             self.population = sum([len(sp) for sp in self.species])
             hidden_distribution = [0]
-            max_fitness = 0
+            max_fitness = -sys.maxint
             best_outcome = None
             for sp in self.species:
                 genome_len = len(sp)
@@ -241,7 +243,7 @@ class Environment(object):
                             max_fitness = gen.fitness
                             best_outcome = gen
 
-            print "Generation %d:\tpopulation = %d,\tspecies = %d,\toutcome = %d,\tmax_fitness = %.2f,\thidden node distribution:%s"%(
+            print "Generation %d:\tpopulation = %d,\tspecies = %d,\toutcome = %d,\tbest_fitness = %.2f,\thidden node distribution:%s"%(
                 self.generation_iter,
                 self.population,
                 len(self.species),
@@ -254,10 +256,11 @@ class Environment(object):
                 pickle.dump(best_outcome, file_out)
 
             # Save environment parameters
-            self.save()
+            if self.generation_iter % 10 == 0:
+                self.save()
 
         # Collecting outcomes
-        max_fitness = 0
+        max_fitness = -sys.maxint
         best_outcome = None
         for sp in self.species:
             for gen in sp:

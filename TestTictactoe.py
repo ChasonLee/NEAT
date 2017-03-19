@@ -104,7 +104,7 @@ class TictactoeTest:
                         output = genome.get_max_output_index()
                         r, c = int(output / self.COL), output % self.COL
                         if not self.move(self.PLAYER1, r, c):
-                            fitness -= 0
+                            fitness -= 10
                             print "(%d, %d) has been occupied."%(r, c)
                             loses += 1
                             break
@@ -118,12 +118,12 @@ class TictactoeTest:
                             fitness += 1
                             wins += 1
                         else:
-                            fitness -= 0
+                            fitness -= 2
                             loses += 1
                         break
                     elif res == self.DRAW:
                         print "There is a draw."
-                        fitness += 0.2
+                        fitness += 0.1
                         draw += 1
                         break
         print "Wins: %d, Loses: %d, Draw: %d, Fitness = %.2f"%(wins, loses, draw, fitness)
@@ -144,7 +144,7 @@ class TictactoeTest:
                         if not self.move(self.PLAYER1, r, c):
                             # print "AI randomly move:"
                             # r, c = self.rnd_move(self.PLAYER1)
-                            fitness -= 0.1
+                            fitness -= 10
                             break
                     else:
                         r, c = self.rnd_move(self.PLAYER2)
@@ -155,11 +155,11 @@ class TictactoeTest:
                         if res == self.PLAYER1:
                             fitness += 1
                         else:
-                            fitness -= 0
+                            fitness -= 2
                         break
                     elif res == self.DRAW:
                         # print "There is a draw."
-                        fitness += 0.2
+                        fitness += 0.1
                         break
         genome.fitness = fitness
         return fitness
@@ -195,7 +195,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '--gen',
-        default=10000,
+        default=100000,
         type=int,
         help='The maximum generations.'
     )
