@@ -52,3 +52,4 @@ Temporary Items
 # Temp Files
 *.env
 *.gen
+*.pyc

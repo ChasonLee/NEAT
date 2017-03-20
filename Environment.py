@@ -305,31 +305,3 @@ class Environment(object):
                 avg_con /= outcomes_len
             print "Evaluation: %d,\tPopulation: %d,\tAverage Hidden node = %f,\tAverage Connection = %f"%(
                 self.evaluation, self.population, avg_hid, avg_con)
-
-    def test(self, task=None):
-        # neat = NEAT(0, 2, 1)
-        # neat.input_nodes[0].value = 1
-        # neat.input_nodes[1].value = 1
-        # neat.forward_propagation()
-        # # neat.show_structure()
-        #
-        # neat.add_hidden_node()
-        # neat.forward_propagation()
-        # # neat.show_structure()
-        #
-        # neat.mutation()
-        # neat.mutation()
-        # neat.mutation()
-        # neat.forward_propagation()
-        # neat.show_structure()
-        #
-        # neat2 = NEAT(1, 2, 1)
-        # neat2.input_nodes[0].value = 1
-        # neat2.input_nodes[1].value = 1
-        # neat2.forward_propagation()
-        # neat2.show_structure()
-        #
-        # print self.compatibility(neat, neat2)
-        with open(self.genome_name, "rb") as file_in:
-            model = pickle.load(file_in)
-        task.test_case(model)

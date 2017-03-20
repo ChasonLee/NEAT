@@ -180,7 +180,6 @@ def main(args=None):
                       survive=args.srv,
                       task=TictactoeTest())
 
-    # env.test(TictactoeTest())
     env.run(task=TictactoeTest(), showResult=True)
     TictactoeTest().test_case(env.outcomes[0])
 
