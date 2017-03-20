@@ -145,7 +145,7 @@ class Environment(object):
                         task.get_fitness(offspring)
                     if NEAT.probability(self.self_mutate_pro):
                         gen.mutation(new_node=False)
-                    task.get_fitness(gen)
+                task.get_fitness(gen)
 
     def compatibility(self, gen1, gen2):
         """Calculating compatibility between two genomes."""
