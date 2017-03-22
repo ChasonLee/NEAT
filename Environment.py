@@ -43,7 +43,9 @@ class Environment(object):
 
         # Load the environment parameters, if you saved it before.
         if os.path.exists(self.environment_name):
+            print "Loading environment parameters...",
             self.load()
+            print "\tDone!"
 
         for sp in self.species:
             for gen in sp:
@@ -192,7 +194,7 @@ class Environment(object):
                 sp.append(genome)
                 return
         # If there is no compatible species, create a new species for the genome.
-        if len(self.species) <= 50:
+        if len(self.species) < 10:
             self.species.append([genome])
 
     def surviving_rule(self):
@@ -243,11 +245,13 @@ class Environment(object):
                             max_fitness = gen.fitness
                             best_outcome = gen
 
-            print "Generation %d:\tpopulation = %d,\tspecies = %d,\toutcome = %d,\tbest_fitness = %.2f,\thidden node distribution:%s"%(
+            print "Generation %d:\tpopulation = %d,\tspecies = %d,\toutcome = %d,\tbest_fitness(%d_%d) = %.2f,\thidden node distribution:%s"%(
                 self.generation_iter,
                 self.population,
                 len(self.species),
                 len(outcome),
+                best_outcome.id,
+                len(best_outcome.hidden_nodes),
                 max_fitness,
                 hidden_distribution)
 

@@ -6,7 +6,7 @@ import sys
 import argparse
 
 class TictactoeTest:
-    play_times = 10
+    play_times = 15
     best_fitness = play_times * 2
 
     ROW = 3
@@ -45,7 +45,7 @@ class TictactoeTest:
             for c in r:
                 self.print_piece(c)
             print
-        print
+        # print
 
     def is_occupied(self, r, c):
         return self.board[r][c] != 0
@@ -85,15 +85,15 @@ class TictactoeTest:
             return self.DRAW
         return None
 
-    def test_case(self, genome):
+    def test_case(self, genome, test_time=500, show_board=False):
         print "Test case:"
-        genome.show_structure()
         wins = 0
         loses = 0
         draw = 0
+        foul = 0
         fitness = 0
         for k in range(2):
-            for i in range(self.play_times):
+            for i in range(test_time):
                 self.init_board()
                 for self.turns in range(self.ROW * self.COL):
                     if self.turns % 2 == k:
@@ -106,11 +106,12 @@ class TictactoeTest:
                         if not self.move(self.PLAYER1, r, c):
                             fitness -= 10
                             print "(%d, %d) has been occupied."%(r, c)
-                            loses += 1
+                            foul += 1
                             break
                     else:
                         r, c = self.rnd_move(self.PLAYER2)
-                    self.show_board()
+                    if show_board:
+                        self.show_board()
                     res = self.judge(r, c)
                     if res != None and res != self.DRAW:
                         print "Player %d wins."%res
@@ -126,7 +127,10 @@ class TictactoeTest:
                         fitness += 0.1
                         draw += 1
                         break
-        print "Wins: %d, Loses: %d, Draw: %d, Fitness = %.2f"%(wins, loses, draw, fitness)
+        print "Test Times: %d\n\tWins: %d\t(%.2f%%)\n\tLoses: %d\t(%.2f%%)\n\tDraws: %d\t(%.2f%%)\n\tFoul = %d\t(%.2f%%)"%(
+            test_time*2, wins, 100.0*wins/test_time/2, loses, 100.0*loses/test_time/2,
+            draw, 100.0*draw/test_time/2, foul, 100.0*foul/test_time/2)
+        genome.show_structure(info_only=True)
 
     def get_fitness(self, genome):
         fitness = 0
