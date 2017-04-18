@@ -91,7 +91,7 @@ class NEAT(object):
         print "\tTotal Nodes:%d\tHidden Nodes:%d"%(self.node_count, len(self.hidden_nodes))
         print "\tEnabled Connections(%d):"%self.connection_count()
         for con in self.connections:
-            print "\t\t[%s %d] = %f\t**[%f]**\t[%s %d] = %f\tEnable = %s\tInnovation = %d"%(
+            print "\t\t[%s %d] = %.2f\t**[%6.2f]**\t[%s %d] = %.2f\tEnable = %s\tInnovation = %d"%(
                     con.input.tag, con.input.id, con.input.value,
                     con.weight,
                     con.output.tag, con.output.id, con.output.value,
