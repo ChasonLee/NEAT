@@ -19,7 +19,7 @@ class Environment(object):
     """
     def __init__(self,input_size, output_size, init_population, max_generation, comp_threshold, avg_comp_num,
                  mating_prob, copy_mutate_pro, self_mutate_pro,excess, disjoint, weight, survive, task,
-                 genome_name="test.gen", environment_name="test.env"):
+                 file_name = None):
         self.input_size = input_size
         self.output_size = output_size
         self.population = init_population
@@ -38,11 +38,10 @@ class Environment(object):
         self.disjoint = disjoint
         self.weight = weight
         self.survive = survive
-        self.genome_name = genome_name
-        self.environment_name = environment_name
+        self.file_name = file_name
 
         # Load the environment parameters, if you saved it before.
-        if os.path.exists(self.environment_name):
+        if self.file_name != None and os.path.exists(self.file_name + '.env'):
             print "Loading environment parameters...",
             self.load()
             print "\tDone!"
@@ -52,14 +51,16 @@ class Environment(object):
                 task.get_fitness(gen)
 
     def save(self):
-        print "Saving...",
-        with open(self.environment_name, "wb") as f:
-            pickle.dump([ self.generation_iter, self.species, self.next_generation, self.outcomes], f)
-        print "\tDone!"
+        if self.file_name != None:
+            print "Saving...",
+            with open(self.file_name + '.env', "wb") as f:
+                pickle.dump([ self.generation_iter, self.species, self.next_generation, self.outcomes], f)
+            print "\tDone!"
 
     def load(self):
-        with open(self.environment_name, "rb") as f:
-            self.generation_iter, self.species, self.next_generation, self.outcomes = pickle.load(f)
+        if self.file_name != None:
+            with open(self.file_name + '.env', "rb") as f:
+                self.generation_iter, self.species, self.next_generation, self.outcomes = pickle.load(f)
 
     def produce_offspring(self, genome):
         """Produce a new offspring."""
@@ -256,8 +257,9 @@ class Environment(object):
                 hidden_distribution)
 
             # Save genome
-            with open(self.genome_name, 'wb') as file_out:
-                pickle.dump(best_outcome, file_out)
+            if self.file_name != None:
+                with open(self.file_name + '.gen', 'wb') as file_out:
+                    pickle.dump(best_outcome, file_out)
 
             # Save environment parameters
             if self.generation_iter % 10 == 0:
@@ -273,12 +275,13 @@ class Environment(object):
                 if gen.fitness > max_fitness:
                     max_fitness = gen.fitness
                     best_outcome = gen
-        if len(self.outcomes) == 0:
-            self.add_outcome(best_outcome)
+        # if len(self.outcomes) == 0:
+        #     self.add_outcome(best_outcome)
 
         # Save best genome
-        with open(self.genome_name, 'wb') as file_out:
-            pickle.dump(best_outcome, file_out)
+        if self.file_name != None:
+            with open(self.file_name + '.gen', 'wb') as file_out:
+                pickle.dump(best_outcome, file_out)
 
         print "Species distribution:"
         for k, sp in enumerate(self.species):
@@ -302,7 +305,7 @@ class Environment(object):
             avg_con = 0.0
             if outcomes_len > 0:
                 for gen in self.outcomes:
-                    # gen.show_structure()
+                    gen.show_structure()
                     avg_hid += len(gen.hidden_nodes)
                     avg_con += gen.connection_count()
                 avg_hid /= outcomes_len

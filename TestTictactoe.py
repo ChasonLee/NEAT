@@ -182,7 +182,8 @@ def main(args=None):
                       disjoint=args.dsj,
                       weight=args.wgh,
                       survive=args.srv,
-                      task=TictactoeTest())
+                      task=TictactoeTest(),
+                      file_name='tictactoe')
 
     env.run(task=TictactoeTest(), showResult=True)
     TictactoeTest().test_case(env.outcomes[0])
