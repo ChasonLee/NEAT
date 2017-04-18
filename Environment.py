@@ -194,7 +194,7 @@ class Environment(object):
                 sp.append(genome)
                 return
         # If there is no compatible species, create a new species for the genome.
-        if len(self.species) < 10:
+        if len(self.species) < 15:
             self.species.append([genome])
 
     def surviving_rule(self):

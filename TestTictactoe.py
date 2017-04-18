@@ -6,7 +6,7 @@ import sys
 import argparse
 
 class TictactoeTest:
-    play_times = 15
+    play_times = 20
     best_fitness = play_times * 2
 
     ROW = 3
@@ -252,7 +252,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '--srv',
-        default=10,
+        default=5,
         type=int,
         help='The number of survivors per generation.'
     )
