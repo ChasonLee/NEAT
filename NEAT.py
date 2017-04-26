@@ -122,6 +122,16 @@ class NEAT(object):
                 res = inx
         return res
 
+    def get_legal_output(self, board, col):
+        res_r, res_c = 0, 0
+        max_value = 0
+        for inx, output in enumerate(self.output_nodes):
+            r, c = inx / col, inx % col
+            if output.value > max_value and board[r][c] == 0:
+                max_value = output.value
+                res_r, res_c = r, c
+        return res_r, res_c
+
     @staticmethod
     def get_innovation(connection):
         """Get innovation number and ensure that the same connection structure has the same innovation number."""

@@ -7,7 +7,7 @@ import argparse
 
 class TictactoeTest:
     play_times = 20
-    best_fitness = play_times * 2
+    best_fitness = play_times * 20
 
     ROW = 3
     COL = 3
@@ -97,12 +97,17 @@ class TictactoeTest:
                 self.init_board()
                 for self.turns in range(self.ROW * self.COL):
                     if self.turns % 2 == k:
+                        # input board data
                         for m in range(self.ROW):
                             for n in range(self.COL):
                                 genome.input_nodes[m * self.COL + n].value = self.board[m][n]
+
+                        # calculate output location
                         genome.forward_propagation()
-                        output = genome.get_max_output_index()
-                        r, c = int(output / self.COL), output % self.COL
+                        # output = genome.get_max_output_index()
+                        # r, c = int(output / self.COL), output % self.COL
+                        r, c = genome.get_legal_output(self.board, self.COL)
+
                         if not self.move(self.PLAYER1, r, c):
                             fitness -= 10
                             print "(%d, %d) has been occupied."%(r, c)
@@ -116,15 +121,15 @@ class TictactoeTest:
                     if res != None and res != self.DRAW:
                         print "Player %d wins."%res
                         if res == self.PLAYER1:
-                            fitness += 1
+                            fitness += 10
                             wins += 1
                         else:
-                            fitness -= 2
+                            fitness -= 0
                             loses += 1
                         break
                     elif res == self.DRAW:
                         print "There is a draw."
-                        fitness += 0.1
+                        fitness += 1
                         draw += 1
                         break
         print "Test Times: %d\n\tWins: %d\t(%.2f%%)\n\tLoses: %d\t(%.2f%%)\n\tDraws: %d\t(%.2f%%)\n\tFoul = %d\t(%.2f%%)"%(
@@ -139,12 +144,16 @@ class TictactoeTest:
                 self.init_board()
                 for self.turns in range(self.ROW * self.COL):
                     if self.turns % 2 == k :
+                        # input board data
                         for m in range(self.ROW):
                             for n in range(self.COL):
                                 genome.input_nodes[m*self.COL+n].value = self.board[m][n]
+
+                        # calculate output location
                         genome.forward_propagation()
-                        output = genome.get_max_output_index()
-                        r, c = int(output / self.COL), output % self.COL
+                        # output = genome.get_max_output_index()
+                        # r, c = int(output / self.COL), output % self.COL
+                        r, c = genome.get_legal_output(self.board, self.COL)
                         if not self.move(self.PLAYER1, r, c):
                             # print "AI randomly move:"
                             # r, c = self.rnd_move(self.PLAYER1)
@@ -157,13 +166,13 @@ class TictactoeTest:
                     if res != None and res != self.DRAW:
                         # print "Player %d wins."%res
                         if res == self.PLAYER1:
-                            fitness += 1
+                            fitness += 10
                         else:
-                            fitness -= 2
+                            fitness -= 0
                         break
                     elif res == self.DRAW:
                         # print "There is a draw."
-                        fitness += 0.1
+                        fitness += 1
                         break
         genome.fitness = fitness
         return fitness
@@ -223,7 +232,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '--cpy',
-        default=0.3,
+        default=0.4,
         type=float,
         help='The copy mutation probability.'
     )
@@ -253,7 +262,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '--srv',
-        default=5,
+        default=10,
         type=int,
         help='The number of survivors per generation.'
     )
