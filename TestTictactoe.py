@@ -7,6 +7,7 @@ import argparse
 
 class TictactoeTest:
     win_reward = 10
+    loss_penalty = 10
     draw_reward = 1
     play_times = 50
     best_fitness = play_times * 2 * win_reward
@@ -127,6 +128,7 @@ class TictactoeTest:
                             wins += 1
                         else:
                             loses += 1
+                            fitness -= self.loss_penalty
                         break
                     elif res == self.DRAW:
                         print "There is a draw."
@@ -169,6 +171,8 @@ class TictactoeTest:
                         # print "Player %d wins."%res
                         if res == self.PLAYER1:
                             fitness += self.win_reward
+                        else:
+                            fitness -= self.loss_penalty
                         break
                     elif res == self.DRAW:
                         # print "There is a draw."
