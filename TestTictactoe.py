@@ -6,22 +6,24 @@ import sys
 import argparse
 
 class TictactoeTest:
-    play_times = 20
-    best_fitness = play_times * 20
+    win_reward = 10
+    draw_reward = 1
+    play_times = 50
+    best_fitness = play_times * 2 * win_reward
 
     ROW = 3
     COL = 3
     WIN_NUM = 3
+    DRAW = 3
 
     PLAYER1 = 1
-    PLAYER2 = 2
-    DRAW = 3
+    PLAYER2 = -1
 
     PLAYER1_CHAR = '#'
     PLAYER2_CHAR = '*'
     MAPS = '.'
 
-    input_size = ROW * COL * 3
+    input_size = ROW * COL
     output_size = ROW * COL
     board = [[0 for c in range(COL)] for r in range(ROW)]
     empty = [[r, c] for r in range(ROW) for c in range(COL)]
@@ -107,12 +109,12 @@ class TictactoeTest:
                         # output = genome.get_max_output_index()
                         # r, c = int(output / self.COL), output % self.COL
                         r, c = genome.get_legal_output(self.board, self.COL)
-
-                        if not self.move(self.PLAYER1, r, c):
-                            fitness -= 10
-                            print "(%d, %d) has been occupied."%(r, c)
-                            foul += 1
-                            break
+                        self.move(self.PLAYER1, r, c)
+                        # if not self.move(self.PLAYER1, r, c):
+                        #     fitness -= 10
+                        #     print "(%d, %d) has been occupied."%(r, c)
+                        #     foul += 1
+                        #     break
                     else:
                         r, c = self.rnd_move(self.PLAYER2)
                     if show_board:
@@ -121,15 +123,14 @@ class TictactoeTest:
                     if res != None and res != self.DRAW:
                         print "Player %d wins."%res
                         if res == self.PLAYER1:
-                            fitness += 10
+                            fitness += self.win_reward
                             wins += 1
                         else:
-                            fitness -= 0
                             loses += 1
                         break
                     elif res == self.DRAW:
                         print "There is a draw."
-                        fitness += 1
+                        fitness += self.draw_reward
                         draw += 1
                         break
         print "Test Times: %d\n\tWins: %d\t(%.2f%%)\n\tLoses: %d\t(%.2f%%)\n\tDraws: %d\t(%.2f%%)\n\tFoul = %d\t(%.2f%%)"%(
@@ -154,11 +155,12 @@ class TictactoeTest:
                         # output = genome.get_max_output_index()
                         # r, c = int(output / self.COL), output % self.COL
                         r, c = genome.get_legal_output(self.board, self.COL)
-                        if not self.move(self.PLAYER1, r, c):
-                            # print "AI randomly move:"
-                            # r, c = self.rnd_move(self.PLAYER1)
-                            fitness -= 10
-                            break
+                        self.move(self.PLAYER1, r, c)
+                        # if not self.move(self.PLAYER1, r, c):
+                        #     # print "AI randomly move:"
+                        #     # r, c = self.rnd_move(self.PLAYER1)
+                        #     fitness -= 10
+                        #     break
                     else:
                         r, c = self.rnd_move(self.PLAYER2)
                     # self.show_board()
@@ -166,13 +168,11 @@ class TictactoeTest:
                     if res != None and res != self.DRAW:
                         # print "Player %d wins."%res
                         if res == self.PLAYER1:
-                            fitness += 10
-                        else:
-                            fitness -= 0
+                            fitness += self.win_reward
                         break
                     elif res == self.DRAW:
                         # print "There is a draw."
-                        fitness += 1
+                        fitness += self.draw_reward
                         break
         genome.fitness = fitness
         return fitness

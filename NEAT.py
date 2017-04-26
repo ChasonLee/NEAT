@@ -2,7 +2,7 @@
 __author__ = 'Chason'
 from Node import *
 from Connection import *
-
+import sys
 import math
 
 class NEAT(object):
@@ -104,7 +104,7 @@ class NEAT(object):
         for con in self.connections:
             if con.enable and con.output.id == id:
                 sum += con.input.value * con.weight
-        return self.sigmoid(sum)
+        return self.tanh(sum)
 
     def forward_propagation(self):
         for hid in self.hidden_nodes:
@@ -124,7 +124,7 @@ class NEAT(object):
 
     def get_legal_output(self, board, col):
         res_r, res_c = 0, 0
-        max_value = 0
+        max_value = -sys.maxint
         for inx, output in enumerate(self.output_nodes):
             r, c = inx / col, inx % col
             if output.value > max_value and board[r][c] == 0:

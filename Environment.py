@@ -246,14 +246,14 @@ class Environment(object):
                             max_fitness = gen.fitness
                             best_outcome = gen
 
-            print "Generation %d:\tpopulation = %d,\tspecies = %d,\toutcome = %d,\tbest_fitness(%d_%d) = %.2f,\thidden node distribution:%s"%(
+            print "Generation %d:\tpopulation = %d,\tspecies = %d,\toutcome = %d,\tbest_fitness(%d_%d) = %.2f%%,\thidden node distribution:%s"%(
                 self.generation_iter,
                 self.population,
                 len(self.species),
                 len(outcome),
                 best_outcome.id,
                 len(best_outcome.hidden_nodes),
-                max_fitness,
+                100.0 * max_fitness / task.best_fitness,
                 hidden_distribution)
 
             # Save genome
