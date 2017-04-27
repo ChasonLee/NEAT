@@ -4,10 +4,11 @@ __author__ = 'Chason'
 from Environment import *
 import sys
 import argparse
+import time
 
 class TictactoeTest:
     win_reward = 10
-    loss_penalty = 10
+    loss_penalty = 100
     draw_reward = 1
     play_times = 50
     best_fitness = play_times * 2 * win_reward
@@ -62,6 +63,8 @@ class TictactoeTest:
 
     def rnd_move(self, player):
         if len(self.empty) > 0:
+            seed = random.random()
+            random.seed(seed*time.time())
             p = random.choice(self.empty)
             self.empty.remove(p)
             self.board[p[0]][p[1]] = player

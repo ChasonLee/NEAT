@@ -186,9 +186,9 @@ class NEAT(object):
         self.node_count += 1
         return node
 
-    def does_connection_exist(self, input, output):
+    def is_connection_exist(self, input, output):
         """Returns true if the connection already exists, otherwise returns false."""
-        for con in self.connections:
+        for con in self.connections[(self.input_size + 1 ) * self.output_size:]:
             if input.id == con.input.id and output.id == con.output.id:
                 return True
         return False
@@ -210,25 +210,25 @@ class NEAT(object):
             for hid in self.hidden_nodes:
                 # consider bias node
                 if self.probability(0.5):
-                    if not self.does_connection_exist(self.bias_node, hid):
+                    if not self.is_connection_exist(self.bias_node, hid):
                         self.add_connection(self.bias_node, hid)
                         break
                 # search input nodes
                 if self.probability(0.5):
                     for node in self.input_nodes:
-                        if not self.does_connection_exist(node, hid):
+                        if not self.is_connection_exist(node, hid):
                             self.add_connection(node, hid)
                             return
                 # search hidden nodes
                 if self.probability(0.5):
                     for hid2 in self.hidden_nodes:
-                        if hid.id != hid2.id and not self.does_connection_exist(hid, hid2):
+                        if hid.id != hid2.id and not self.is_connection_exist(hid, hid2):
                             self.add_connection(hid, hid2)
                             return
                 # search output nodes
                 if self.probability(0.5):
                     for node in self.output_nodes:
-                        if not self.does_connection_exist(hid, node):
+                        if not self.is_connection_exist(hid, node):
                             self.add_connection(hid, node)
                             return
 

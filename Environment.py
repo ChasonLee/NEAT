@@ -54,13 +54,13 @@ class Environment(object):
         if self.file_name != None:
             print "Saving...",
             with open(self.file_name + '.env', "wb") as f:
-                pickle.dump([ self.generation_iter, self.species, self.next_generation, self.outcomes], f)
+                pickle.dump([ self.generation_iter, self.species, self.next_generation, self.outcomes, NEAT.connection_list], f)
             print "\tDone!"
 
     def load(self):
         if self.file_name != None:
             with open(self.file_name + '.env', "rb") as f:
-                self.generation_iter, self.species, self.next_generation, self.outcomes = pickle.load(f)
+                self.generation_iter, self.species, self.next_generation, self.outcomes, NEAT.connection_list = pickle.load(f)
 
     def produce_offspring(self, genome):
         """Produce a new offspring."""
