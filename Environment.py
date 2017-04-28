@@ -39,6 +39,7 @@ class Environment(object):
         self.weight = weight
         self.survive = survive
         self.file_name = file_name
+        self.adversarial_genomes = []
 
         # Load the environment parameters, if you saved it before.
         if self.file_name != None and os.path.exists(self.file_name + '.env'):
@@ -50,17 +51,29 @@ class Environment(object):
             for gen in sp:
                 task.get_fitness(gen)
 
+    def update_adversarial_genomes(self, task):
+        self.adversarial_genomes = []
+        for sp in self.species:
+            self.adversarial_genomes.extend(sp[:])
+        self.adversarial_genomes.sort(key=lambda NEAT: NEAT.fitness, reverse=True)
+        self.adversarial_genomes = self.adversarial_genomes[0:(task.play_times/5)]
+
     def save(self):
         if self.file_name != None:
             print "Saving...",
             with open(self.file_name + '.env', "wb") as f:
-                pickle.dump([ self.generation_iter, self.species, self.next_generation, self.outcomes, NEAT.connection_list], f)
+                pickle.dump([ self.generation_iter,
+                              self.species,
+                              self.next_generation,
+                              self.outcomes,
+                              self.adversarial_genomes,
+                              NEAT.connection_list], f)
             print "\tDone!"
 
     def load(self):
         if self.file_name != None:
             with open(self.file_name + '.env', "rb") as f:
-                self.generation_iter, self.species, self.next_generation, self.outcomes, NEAT.connection_list = pickle.load(f)
+                self.generation_iter, self.species, self.next_generation, self.outcomes, self.adversarial_genomes, NEAT.connection_list = pickle.load(f)
 
     def produce_offspring(self, genome):
         """Produce a new offspring."""
@@ -119,7 +132,8 @@ class Environment(object):
                                         output_node_id=con.output.id,
                                         weight=con.weight,
                                         enable=con.enable)
-        task.get_fitness(offspring)
+        # task.get_fitness(offspring)
+        task.get_adversarial_fitness(offspring, self.adversarial_genomes)
         return offspring
 
     def mating_genomes(self, task):
@@ -145,10 +159,12 @@ class Environment(object):
                     if NEAT.probability(self.copy_mutate_pro):
                         offspring = self.produce_offspring(gen)
                         offspring.mutation()
-                        task.get_fitness(offspring)
+                        # task.get_fitness(offspring)
+                        task.get_adversarial_fitness(offspring, self.adversarial_genomes)
                     if NEAT.probability(self.self_mutate_pro):
                         gen.mutation(new_node=False)
-                task.get_fitness(gen)
+                # task.get_fitness(gen)
+                task.get_adversarial_fitness(gen, self.adversarial_genomes)
 
     def compatibility(self, gen1, gen2):
         """Calculating compatibility between two genomes."""
@@ -255,6 +271,11 @@ class Environment(object):
                 len(best_outcome.hidden_nodes),
                 100.0 * max_fitness / task.best_fitness,
                 hidden_distribution)
+
+            # Update adversarial genomes
+            # if self.generation_iter >= 100 and self.generation_iter % 10 == 0:
+            #     self.update_adversarial_genomes(task)
+            #     print "Adversarial genomes updated."
 
             # Save genome
             if self.file_name != None:

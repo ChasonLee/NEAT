@@ -143,6 +143,56 @@ class TictactoeTest:
             draw, 100.0*draw/test_time/2, foul, 100.0*foul/test_time/2)
         genome.show_structure(info_only=True)
 
+    def get_adversarial_fitness(self, genome, adversarial):
+        fitness = 0
+        for k in range(2):
+            for i in range(self.play_times):
+                self.init_board()
+                for self.turns in range(self.ROW * self.COL):
+                    if self.turns % 2 == k:
+                        # input board data
+                        for m in range(self.ROW):
+                            for n in range(self.COL):
+                                genome.input_nodes[m * self.COL + n].value = self.board[m][n]
+
+                        # calculate output location
+                        genome.forward_propagation()
+                        # output = genome.get_max_output_index()
+                        # r, c = int(output / self.COL), output % self.COL
+                        r, c = genome.get_legal_output(self.board, self.COL)
+                        self.move(self.PLAYER1, r, c)
+                        # if not self.move(self.PLAYER1, r, c):
+                        #     # print "AI randomly move:"
+                        #     # r, c = self.rnd_move(self.PLAYER1)
+                        #     fitness -= 10
+                        #     break
+                    else:
+                        if i < len(adversarial) and k == 1:
+                            for m in range(self.ROW):
+                                for n in range(self.COL):
+                                    adversarial[i].input_nodes[m * self.COL + n].value = -self.board[m][n]
+                            adversarial[i].forward_propagation()
+                            r, c = adversarial[i].get_legal_output(self.board, self.COL)
+                            self.move(self.PLAYER2, r, c)
+                        else:
+                            r, c = self.rnd_move(self.PLAYER2)
+
+                    # self.show_board()
+                    res = self.judge(r, c)
+                    if res != None and res != self.DRAW:
+                        # print "Player %d wins."%res
+                        if res == self.PLAYER1:
+                            fitness += self.win_reward
+                        else:
+                            fitness -= self.loss_penalty
+                        break
+                    elif res == self.DRAW:
+                        # print "There is a draw."
+                        fitness += self.draw_reward
+                        break
+        genome.fitness = fitness
+        return fitness
+
     def get_fitness(self, genome):
         fitness = 0
         for k in range(2):
@@ -221,7 +271,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '--thr',
-        default=2.5,
+        default=2.0,
         type=float,
         help='The compatibility threshold.'
     )
